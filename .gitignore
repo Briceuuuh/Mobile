@@ -1,0 +1,49 @@
+# Flutter dependencies
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+.idea/
+.vscode/
+*.iml
+
+# Build outputs
+build/
+ios/Flutter/Flutter.framework/
+ios/Flutter/App.framework/
+ios/Flutter/Generated.xcconfig
+ios/.symlinks/
+ios/Pods/
+ios/Runner.xcworkspace/
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
+**/GeneratedPluginRegistrant.java
+
+# Dependency lock files
+pubspec.lock
+
+# Web build folder
+web/
+
+# macOS build folders
+macos/Flutter/Flutter.framework/
+macos/Flutter/Flutter.podspec
+macos/Flutter/Generated.xcconfig
+macos/.symlinks/
+macos/Pods/
+macos/Runner.xcworkspace/
+
+# Windows build folder
+windows/Flutter/GeneratedPluginRegistrant.cpp
+
+# Linux build folder
+linux/Flutter/GeneratedPluginRegistrant.cc
+
+# Hidden files and directories
+.DS_Store
+*.log
+*.orig
+*.swp
