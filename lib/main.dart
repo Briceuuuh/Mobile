@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http; 
-import 'dart:convert'; 
-import 'dart:io'; 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 import 'package:path/path.dart' as path;
 
 import 'package:flutter/foundation.dart';
@@ -10,17 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
-
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Obtenir la liste des caméras disponibles
   final cameras = await availableCameras();
   final firstCamera = cameras.first;
   runApp(MyApp(camera: firstCamera));
 }
-
-
 
 class MyApp extends StatelessWidget {
   final CameraDescription camera;
@@ -39,8 +34,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
-
 class MyHomePage extends StatefulWidget {
   final CameraDescription camera;
   const MyHomePage({super.key, required this.camera});
@@ -48,8 +41,6 @@ class MyHomePage extends StatefulWidget {
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
-
-
 
 class _MyHomePageState extends State<MyHomePage> {
   late CameraController _cameraController;
@@ -59,8 +50,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
-    // Initialise les options dans initState
     final ObjectDetectorOptions options = ObjectDetectorOptions(
       classifyObjects: true,
       trackMutipleObjects: true,
@@ -84,27 +73,22 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
-
   Future<void> _takePicture() async {
     try {
-      // Capture the image
       final image = await _cameraController.takePicture();
-      // Show alert when the photo is taken
       await _uploadImage(File(image.path));
-      // Optionally, you can save or process the image file
       print('Photo taken and saved at: ${image.path}');
     } catch (e) {
       print("Error while taking the picture: $e");
     }
   }
+
   Future<void> _uploadImage(File imageFile) async {
     try {
-      // Crée un formulaire multipart
-      var uri = Uri.parse("http://10.143.232.106:3000/upload"); // Remplace par l'IP ou l'adresse de ton serveur
+      var uri = Uri.parse(
+          "https://eae3-109-255-48-69.ngrok-free.app/api/check_product");
       var request = http.MultipartRequest('POST', uri);
 
-      // Ajoute l'image dans le corps de la requête
       request.files.add(
         await http.MultipartFile.fromPath(
           'image',
@@ -113,17 +97,14 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
 
-      // Envoie la requête
       var response = await request.send();
 
-      // Vérifie la réponse du serveur
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         print("Image envoyée avec succès");
         var responseData = await response.stream.bytesToString();
         var decodedData = json.decode(responseData);
         print("Réponse du serveur: ${decodedData['message']}");
 
-        // Affiche un message de confirmation
         showDialog(
           context: context,
           builder: (BuildContext context) {
