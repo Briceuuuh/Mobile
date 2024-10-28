@@ -1,6 +1,6 @@
 
-```markdown
 ## Mobile
+
 # Flutter Camera Object Detection App
 
 Cette application Flutter utilise la caméra pour détecter des objets en temps réel à l'aide de Google ML Kit. L'utilisateur peut prendre une photo et l'envoyer à un serveur pour traitement.
@@ -14,14 +14,7 @@ Cette application Flutter utilise la caméra pour détecter des objets en temps 
 
 ## Installation
 
-1. **Clonez le dépôt :**
-
-   ```bash
-   git clone https://votre-url-depot.git
-   cd votre-dossier
-   ```
-
-2. **Installez les dépendances :**
+1. **Installez les dépendances :**
 
    Ouvrez le terminal dans le répertoire du projet et exécutez :
 
@@ -29,7 +22,7 @@ Cette application Flutter utilise la caméra pour détecter des objets en temps 
    flutter pub get
    ```
 
-3. **Ajoutez les permissions nécessaires :**
+2. **Ajoutez les permissions nécessaires :**
 
    Modifiez le fichier `AndroidManifest.xml` pour inclure les permissions d'accès à la caméra et à Internet :
 
@@ -98,12 +91,3 @@ Les contributions sont les bienvenues ! N'hésitez pas à soumettre des issues o
 ## License
 
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-```
-
-### Explications
-
-- **Sections claires** : Le README est divisé en sections faciles à suivre, ce qui facilite la compréhension de la configuration et de l'utilisation de l'application.
-- **Instructions sur Ngrok** : Des étapes détaillées sur l'utilisation de Ngrok sont fournies, ce qui est essentiel pour le bon fonctionnement de votre application.
-- **Utilisation de l'API** : L'instruction sur la mise à jour de l'URL de l'API garantit que les utilisateurs savent comment configurer correctement l'application pour fonctionner avec le serveur.
-
-N'hésitez pas à modifier ou à adapter le contenu en fonction de vos besoins spécifiques !
