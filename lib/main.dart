@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:remove_bg/remove_bg.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+
     final ObjectDetectorOptions options = ObjectDetectorOptions(
       classifyObjects: true,
       trackMutipleObjects: true,
@@ -76,52 +78,63 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _takePicture() async {
     try {
       final image = await _cameraController.takePicture();
-      await _uploadImage(File(image.path));
-      print('Photo taken and saved at: ${image.path}');
+      final imageFile = File(image.path);
+
+      Uint8List? processedImage = await _removeBackground(imageFile);
+
+      if (processedImage != null) {
+        await _uploadImage(processedImage);
+      } else {
+        print("Erreur lors de la suppression de l'arrière-plan.");
+      }
     } catch (e) {
-      print("Error while taking the picture: $e");
+      print("Erreur lors de la prise de photo: $e");
     }
   }
 
-  Future<void> _uploadImage(File imageFile) async {
+  Future<Uint8List?> _removeBackground(File imageFile) async {
+    Uint8List? bytes;
+    try {
+      bytes = await Remove().bg(
+        imageFile,
+        privateKey: "hsoyPQ6zZ9VGdi4yW5dNUM99", // remplace par ta clé privée
+        onUploadProgressCallback: (progressValue) {
+          setState(() {
+            print("Progression : $progressValue");
+          });
+        },
+      );
+    } catch (e) {
+      print("Erreur lors de la suppression de l'arrière-plan : $e");
+    }
+    return bytes;
+  }
+
+  Future<void> _uploadImage(Uint8List imageData) async {
     try {
       var uri = Uri.parse(
           "https://eae3-109-255-48-69.ngrok-free.app/api/check_product");
-      var request = http.MultipartRequest('POST', uri);
-
+  
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/tempImage.png';
+      File tempFile = File(filePath);
+      await tempFile.writeAsBytes(imageData);
+  
       request.files.add(
         await http.MultipartFile.fromPath(
           'image',
-          imageFile.path,
-          filename: path.basename(imageFile.path), // Nom de fichier
+          tempFile.path,
+          filename: "image.png",
         ),
       );
-
+  
       var response = await request.send();
-
+  
       if (response.statusCode == 201) {
         print("Image envoyée avec succès");
         var responseData = await response.stream.bytesToString();
         var decodedData = json.decode(responseData);
         print("Réponse du serveur: ${decodedData['message']}");
-
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Succès'),
-              content: const Text('Image envoyée au serveur avec succès !'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
       } else {
         print("Erreur lors de l'envoi de l'image: ${response.statusCode}");
       }
