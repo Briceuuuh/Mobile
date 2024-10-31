@@ -114,6 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       var uri = Uri.parse(
           "https://eae3-109-255-48-69.ngrok-free.app/api/check_product");
+      var request = http.MultipartRequest('POST', uri);
   
       final tempDir = await getTemporaryDirectory();
       final filePath = '${tempDir.path}/tempImage.png';
@@ -135,6 +136,24 @@ class _MyHomePageState extends State<MyHomePage> {
         var responseData = await response.stream.bytesToString();
         var decodedData = json.decode(responseData);
         print("Réponse du serveur: ${decodedData['message']}");
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Succès'),
+              content: const Text('Image envoyée au serveur avec succès !'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
       } else {
         print("Erreur lors de l'envoi de l'image: ${response.statusCode}");
       }
