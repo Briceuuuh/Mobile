@@ -68,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
       _cameraController.startImageStream((image) {
         if (!_isDetecting) {
-          _isDetecting = true;
+          // _isDetecting = true;
           // _detectObject(image);
         }
       });
