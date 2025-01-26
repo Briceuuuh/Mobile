@@ -6,24 +6,21 @@ import {
   TextInput,
   Button,
   Alert,
-  Image,
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../config";
 import { BackGround } from "../../component/background";
 
-const LoginScreen = () => {
+const LostPassword = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState("briceuh29@gmail.com");
-  const [password, setPassword] = useState("Password");
 
-  const handleLogin = async () => {
+  const handleLostPassword = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate("TabStack");
+      await sendPasswordResetEmail(auth, email)
     } catch (error) {
       Alert.alert("Erreur", error.message);
     }
@@ -35,7 +32,7 @@ const LoginScreen = () => {
       <SafeAreaView style={{ flex: 1 }}>
         <Text style={styles.title}>E-kart</Text>
         <Text style={{ fontSize: 18, textAlign: "center", marginBottom: 18 }}>
-          Connexion
+          Mot de passe oublié
         </Text>
         <Text style={{ width: "90%", alignSelf: "center" }}>Email</Text>
         <TextInput
@@ -56,40 +53,6 @@ const LoginScreen = () => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <Text style={{ width: "90%", alignSelf: "center" }}>Mot de passe</Text>
-        <TextInput
-          style={{
-            width: "90%",
-            backgroundColor: "white",
-            alignSelf: "center",
-            height: 50,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 8,
-            paddingHorizontal: 16,
-          }}
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("LostPassword");
-          }}
-        >
-          <Text
-            style={{
-              width: "90%",
-              alignSelf: "center",
-              textAlign: "right",
-            }}
-          >
-            Mot de passe oublié ?
-          </Text>
-        </TouchableOpacity>
-
         <View
           style={{
             flex: 1,
@@ -99,23 +62,8 @@ const LoginScreen = () => {
         >
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate("SignUp");
+              handleLostPassword();
             }}
-          >
-            <Text
-              style={{
-                width: "90%",
-                alignSelf: "center",
-                textAlign: "right",
-                marginBottom: 10,
-                textDecorationLine: "underline",
-              }}
-            >
-              S'inscrire ?
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleLogin}
             style={{
               width: "90%",
               height: 50,
@@ -125,7 +73,7 @@ const LoginScreen = () => {
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: "white" }}>Se connecter</Text>
+            <Text style={{ color: "white" }}>Envoyer un code</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -151,4 +99,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default LostPassword;

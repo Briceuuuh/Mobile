@@ -8,6 +8,8 @@ import { Ionicons } from "@expo/vector-icons";
 import LoginScreen from "./screens/authStack/LoginScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import LostPassword from "./screens/authStack/LostPassword";
+import SignUp from "./screens/authStack/SignUp";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -21,7 +23,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setInitializing(false); 
+      setInitializing(false);
     });
 
     return unsubscribe;
@@ -35,7 +37,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName={user ? "TabStack" : "Login"}
-        screenOptions={{ 
+        screenOptions={{
           headerShown: true,
           headerStyle: {},
         }}
@@ -46,8 +48,23 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="LostPassword"
+          component={LostPassword}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SignUp"
+          component={SignUp}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="TabStack"
-          component={TabStack}
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
@@ -76,9 +93,16 @@ const TabStack = () => {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      {/* <Tab.Screen name="Profile" component={ProfileScreen} /> */}
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
     </Tab.Navigator>
   );
 };
