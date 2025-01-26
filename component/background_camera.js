@@ -14,7 +14,7 @@ export const BackGroundCamera = () => {
       <Image
         style={{
           width: "100%",
-          top: 0,
+          top: -20,
           position: "absolute",
         }}
         source={require("./../assets/wave_top.png")}

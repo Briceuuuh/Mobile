@@ -18,12 +18,36 @@ import { IconSvg } from "../icon";
 import { Touchable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
+import { Camera, CameraView } from "expo-camera";
+import * as Device from "expo-device";
+
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [image, setImage] = useState(null);
   const [user, setUser] = useState(null);
   const [basket, setBasket] = useState([]);
+  const [hasPermission, setHasPermission] = useState(null);
+  const [cameraRef, setCameraRef] = useState(null);
+  const [isSimulator, setIsSimulator] = useState(false);
   const navigation = useNavigation();
+
+  React.useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+
+      const isDeviceSimulator = !Device.isDevice || Device.modelName.includes("Simulator");
+      setIsSimulator(isDeviceSimulator);
+    })();
+  }, []);
+
+  const takePicture = async () => {
+    if (cameraRef) {
+      const photo = await cameraRef.takePictureAsync();
+      setImage(photo.uri);
+      sendImage();
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -124,22 +148,67 @@ const HomeScreen = () => {
             navigation.navigate("Settings");
           }}
           style={{
+            zIndex: 999,
             position: "absolute",
             right: 30,
             top: 60,
             width: 40,
             height: 40,
+            backgroundColor: "white",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 20,
           }}
         >
           <IconSvg />
         </TouchableOpacity>
         {user ? (
           <>
-            <Button title="Pick an image" onPress={pickImage} />
-            {image && (
+            {!isSimulator ? (
+              <CameraView
+                style={{ flex: 1, width: "100%" }}
+                ref={(ref) => setCameraRef(ref)}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    backgroundColor: "transparent",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    marginBottom: 20,
+                  }}
+                >
+                  <View
+                    style={{
+                      flex: 1,
+                      position: "absolute",
+                      width: "100%",
+                      height: "100%",
+                    }}
+                  >
+                    <Image
+                      style={{
+                        width: "100%",
+                        top: -30,
+                        position: "absolute",
+                      }}
+                      source={require("./../assets/wave_top.png")}
+                    />
+                  </View>
+                  <Button title="Prendre une photo" onPress={takePicture} />
+                  <View style={{ height: 50 }} />
+                </View>
+              </CameraView>
+            ) : (
               <>
-                <Image source={{ uri: image }} style={styles.image} />
-                <Button title="Send Image" onPress={sendImage} />
+                <Button title="Pick an image" onPress={pickImage} />
+                {image && (
+                  <>
+                    <Image source={{ uri: image }} style={styles.image} />
+                    <Button title="Send Image" onPress={sendImage} />
+                  </>
+                )}
               </>
             )}
           </>
@@ -186,6 +255,7 @@ const HomeScreen = () => {
             <Text style={styles.modalText}>Panier !</Text>
             <FlatList
               style={{ width: "100%" }}
+              showsVerticalScrollIndicator={false}
               data={basket}
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
@@ -385,12 +455,13 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContent: {
-    width: "80%",
+    width: "90%",
+    height: "70%",
     backgroundColor: "#F8C471",
     borderRadius: 10,
     padding: 20,
