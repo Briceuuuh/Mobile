@@ -13,23 +13,40 @@ import { useNavigation } from "@react-navigation/native";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
-import { auth } from "../../config";
+import { auth, db } from "../../config";
 import { BackGround } from "../../component/background";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const SignUp = () => {
   const navigation = useNavigation();
-  const [email, setEmail] = useState("briceuh29@gmail.com");
+  const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
 
   const handleSignUp = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password).then(
-        (val) => {
-          console.log(JSON.stringify(val, null, 2));
-          navigation.navigate("Login");
-        }
-      );
+      await signOut(auth);
+      const val = await createUserWithEmailAndPassword(auth, email, password);
+      const userRef = doc(db, "client", val?.user?.uid);
+      const userDoc = await getDoc(userRef);
+  
+      if (userDoc.exists()) {
+        Alert.alert("Erreur", "L'email existe déjà");
+        return;
+      }
+  
+      const newUser = {
+        email,
+        created_at: new Date().toISOString(),
+        current_kart: {
+          idStore: "",
+          kart: [],
+        },
+      };
+  
+      await setDoc(userRef, newUser);
+      navigation.navigate("Login");
     } catch (error) {
       Alert.alert("Erreur", error.message);
     }

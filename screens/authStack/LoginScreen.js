@@ -17,7 +17,7 @@ import { BackGround } from "../../component/background";
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const [email, setEmail] = useState("briceuh29@gmail.com");
+  const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
 
   const handleLogin = async () => {

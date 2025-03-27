@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,13 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../config";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
 import { BackGroundCamera } from "../component/background_camera";
 import { IconSvg } from "../icon";
 import { Touchable } from "react-native";
@@ -20,6 +26,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import { Camera, CameraView } from "expo-camera";
 import * as Device from "expo-device";
+import { Picker } from "@react-native-picker/picker";
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -30,13 +37,16 @@ const HomeScreen = () => {
   const [cameraRef, setCameraRef] = useState(null);
   const [isSimulator, setIsSimulator] = useState(false);
   const navigation = useNavigation();
+  const [stores, setStores] = useState([]); // Liste des magasins
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
 
   React.useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
 
-      const isDeviceSimulator = !Device.isDevice || Device.modelName.includes("Simulator");
+      const isDeviceSimulator =
+        !Device.isDevice || Device.modelName.includes("Simulator");
       setIsSimulator(isDeviceSimulator);
     })();
   }, []);
@@ -50,6 +60,26 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const storesCollection = collection(db, "commerce");
+        const storesSnapshot = await getDocs(storesCollection);
+        const storesList = storesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setStores(storesList);
+        if (storesList.length > 0) {
+          setSelectedStoreId(storesList[0].id); // Par défaut, sélectionne le premier magasin
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des magasins :", error);
+      }
+    };
+    fetchStores();
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
@@ -59,12 +89,12 @@ const HomeScreen = () => {
   useEffect(() => {
     if (!user?.uid) return;
 
-    const docRef = doc(db, "current_kart", user.uid);
+    const docRef = doc(db, "client", user.uid);
     const unsubscribe = onSnapshot(
       docRef,
       (docSnapshot) => {
         if (docSnapshot.exists()) {
-          const basketData = docSnapshot.data()?.basket || [];
+          const basketData = docSnapshot.data()?.current_kart?.kart || [];
           setBasket(basketData);
         } else {
           setBasket([]);
@@ -81,10 +111,13 @@ const HomeScreen = () => {
   const deleteBasket = async () => {
     if (!user?.uid) return;
 
-    const docRef = doc(db, "current_kart", user.uid);
+    const docRef = doc(db, "client", user.uid);
     try {
       await updateDoc(docRef, {
-        basket: [],
+        current_kart: {
+          idStore: "",
+          kart: [],
+        },
       });
       setBasket([]);
     } catch (error) {
@@ -112,31 +145,38 @@ const HomeScreen = () => {
     }
   };
 
-  const sendImage = () => {
-    if (!image) return;
+  const sendImage = async () => {
+    if (!image) {
+      Alert.alert("Erreur", "Aucune image sélectionnée");
+      return;
+    }
 
+    const fileType = image.split(".").pop();
     const formData = new FormData();
-    const uriParts = image.split(".");
-    const fileType = uriParts[uriParts.length - 1];
-    const file = {
+    formData.append("image", {
       uri: image,
       name: `image.${fileType}`,
       type: `image/${fileType}`,
-    };
+    });
 
-    formData.append("image", file);
-    formData.append("id_user", user.uid);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    const requestOptions = {
-      method: "POST",
-      body: formData,
-      redirect: "follow",
-    };
-
-    fetch("https://api-ekart.netlify.app/api/checkProduct", requestOptions)
-      .then((response) => response.text())
-      .then((result) => console.log(result))
-      .catch((error) => console.error(error));
+      const result = await response.json();
+      console.log("Réponse de l'API :", result);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'image :", error);
+      Alert.alert("Erreur", "L'envoi de l'image a échoué");
+    }
   };
 
   return (
@@ -164,53 +204,68 @@ const HomeScreen = () => {
         </TouchableOpacity>
         {user ? (
           <>
-            {!isSimulator ? (
-              <CameraView
-                style={{ flex: 1, width: "100%" }}
-                ref={(ref) => setCameraRef(ref)}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    width: "100%",
-                    backgroundColor: "transparent",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    marginBottom: 20,
-                  }}
+            <Picker
+              selectedValue={selectedStoreId}
+              onValueChange={(itemValue) => setSelectedStoreId(itemValue)}
+              style={{ height: 50, width: 200, marginBottom: 200 }}
+            >
+              {stores.map((store) => (
+                <Picker.Item
+                  key={store.id}
+                  label={store.name || store.id}
+                  value={store.id}
+                />
+              ))}
+            </Picker>
+            <>
+              {!isSimulator ? (
+                <CameraView
+                  style={{ flex: 1, width: "100%" }}
+                  ref={(ref) => setCameraRef(ref)}
                 >
                   <View
                     style={{
                       flex: 1,
-                      position: "absolute",
                       width: "100%",
-                      height: "100%",
+                      backgroundColor: "transparent",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      marginBottom: 20,
                     }}
                   >
-                    <Image
+                    <View
                       style={{
-                        width: "100%",
-                        top: -30,
+                        flex: 1,
                         position: "absolute",
+                        width: "100%",
+                        height: "100%",
                       }}
-                      source={require("./../assets/wave_top.png")}
-                    />
+                    >
+                      <Image
+                        style={{
+                          width: "100%",
+                          top: -30,
+                          position: "absolute",
+                        }}
+                        source={require("./../assets/wave_top.png")}
+                      />
+                    </View>
+                    <Button title="Prendre une photo" onPress={takePicture} />
+                    <View style={{ height: 50 }} />
                   </View>
-                  <Button title="Prendre une photo" onPress={takePicture} />
-                  <View style={{ height: 50 }} />
-                </View>
-              </CameraView>
-            ) : (
-              <>
-                <Button title="Pick an image" onPress={pickImage} />
-                {image && (
-                  <>
-                    <Image source={{ uri: image }} style={styles.image} />
-                    <Button title="Send Image" onPress={sendImage} />
-                  </>
-                )}
-              </>
-            )}
+                </CameraView>
+              ) : (
+                <>
+                  <Button title="Pick an image" onPress={pickImage} />
+                  {image && (
+                    <>
+                      <Image source={{ uri: image }} style={styles.image} />
+                      <Button title="Send Image" onPress={sendImage} />
+                    </>
+                  )}
+                </>
+              )}
+            </>
           </>
         ) : (
           <Text>
