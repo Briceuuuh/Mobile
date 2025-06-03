@@ -22,7 +22,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { BackGroundCamera } from "../component/background_camera";
-import { IconSvg } from "../icon";
+import { IconAcitivate, IconSvg, IconTopArrow } from "../icon";
 import { Touchable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -183,9 +183,10 @@ const HomeScreen = () => {
       Alert.alert("Erreur", "L'envoi de l'image a échoué");
     }
   };
+  // console.log(JSON.stringify(basket,null,2));
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "lightgray" }}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <TouchableOpacity
           onPress={() => {
@@ -263,7 +264,15 @@ const HomeScreen = () => {
                   <Button title="Pick an image" onPress={pickImage} />
                   {image && (
                     <>
-                      <Image source={{ uri: image }} style={styles.image} />
+                      <Image
+                        source={{ uri: image }}
+                        style={{
+                          width: 200,
+                          height: 200,
+                          marginVertical: 16,
+                          borderRadius: 8,
+                        }}
+                      />
                       <Button title="Send Image" onPress={sendImage} />
                     </>
                   )}
@@ -278,79 +287,230 @@ const HomeScreen = () => {
           </Text>
         )}
       </View>
+
       <TouchableOpacity
+        onPress={() => setModalVisible(true)}
         style={{
-          backgroundColor: "#F8C471",
-          borderRadius: 8,
-          alignItems: "center",
-          justifyContent: "center",
           position: "absolute",
           bottom: 0,
-          paddingBottom: 10,
-          alignSelf: "center",
           width: "100%",
-          flexDirection: "row",
+          alignItems: "center",
         }}
-        onPress={() => setModalVisible(true)}
       >
-        <Text>Votre panier</Text>
-
-        <Text style={{ marginLeft: 10, fontWeight: "bold" }}>
-          {basket.length} article{basket.length > 1 ? "s" : ""}
-        </Text>
+        <Svg height="110" width={screenWidth}>
+          <Path
+            d={`M0 50 Q${
+              screenWidth / 2
+            } -40 ${screenWidth} 50 L${screenWidth} 110 L0 110 Z`}
+            fill="white"
+          />
+        </Svg>
+        <View style={{ position: "absolute", top: 20, alignItems: "center" }}>
+          <IconTopArrow />
+          <Text style={{ fontSize: 10 }}>
+            Votre panier contient {basket.length} article
+            {basket.length > 1 ? "s" : ""}
+          </Text>
+          <Text style={{ fontSize: 25 }}>
+            {basket.reduce((sum, item) => sum + item.price * item.quantity, 0)}€
+          </Text>
+          <Text style={{ fontSize: 10, color: "#FF3333", marginBottom: 10 }}>
+            Auto-paiement à la sortie
+          </Text>
+        </View>
       </TouchableOpacity>
-{/* 
-      <Svg height="100" width="100%">
-        <Path d="M0 20 Q100 0 200 20 L200 100 L0 100 Z" fill="skyblue" />
-      </Svg>
- */}
+
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Panier !</Text>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => setModalVisible(!true)}
+            style={{
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Svg height="110" width={screenWidth}>
+              <Path
+                d={`M0 50 Q${
+                  screenWidth / 2
+                } -40 ${screenWidth} 50 L${screenWidth} 110 L0 110 Z`}
+                fill="white"
+              />
+            </Svg>
+            <View
+              style={{
+                position: "absolute",
+                top: 20,
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <TouchableOpacity
+                onPress={deleteBasket}
+                style={{
+                  position: "absolute",
+                  top: 20,
+                  right: 40,
+                  width: 77,
+                  height: 35,
+                  borderRadius: 17.5,
+                  backgroundColor: "#EC263D",
+                  alignItems: "center",
+                }}
+              >
+                <IconAcitivate />
+                <Text style={{ fontSize: 10, color: "white" }}>Abandon</Text>
+              </TouchableOpacity>
+              <View style={{ transform: [{ rotate: "180deg" }] }}>
+                <IconTopArrow />
+              </View>
+              <Text style={{ fontSize: 10 }}>Votre panier</Text>
+              <Text style={{ fontSize: 25 }}>
+                {basket_bob.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0
+                )}
+                €
+              </Text>
+              <Text>{""}</Text>
+              <View
+                style={{
+                  left: 0,
+                  flexDirection: "row",
+                  width: "95%",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 10, color: "#FF3333" }}>
+                  Auto-paiement à la sortie
+                </Text>
+                <Text style={{ fontSize: 13 }}>
+                  Nombre d'articles: {basket_bob.length}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+          <View
+            style={{
+              width: "100%",
+              height: "70%",
+              bottom: 0,
+              backgroundColor: "white",
+              borderTopWidth: 1,
+              alignItems: "center",
+            }}
+          >
             <FlatList
               style={{ width: "100%" }}
               showsVerticalScrollIndicator={false}
-              data={basket}
+              data={basket_bob}
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
-                <View
-                  style={{
-                    backgroundColor: "white",
-                    marginBottom: 10,
-                    padding: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  <Image
+                <>
+                  <View
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRightWidth: 1,
-                      paddingRight: 10,
-                      marginRight: 10,
+                      backgroundColor: "#007A5E",
+                      alignSelf: "center",
+                      width: "90%",
+                      marginTop: 15,
+                      paddingTop: 3,
+                      paddingBottom: 3,
+                      paddingLeft: 3,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      borderRadius: 100,
                     }}
-                    source={require("./../assets/logo Ekart.png")}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "12" }}>
-                      {item.product_name || "Produit inconnu"} -{" "}
-                      {item.price || "0"}€
-                    </Text>
+                  >
+                    <View>
+                      <Image
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 25,
+                          backgroundColor: "white",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginRight: 10,
+                        }}
+                        source={require("./../assets/logo Ekart.png")}
+                      />
+                    </View>
+                    <View
+                      style={{
+                        flex: 1,
+                        // backgroundColor: "pink",
+                        height: "100%",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          color: "white",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {item.product_name || "Produit inconnu"}
+                      </Text>
+                      <TouchableOpacity
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            textDecorationLine: "underline",
+                          }}
+                        >
+                          Info nutrition
+                        </Text>
+                      </TouchableOpacity>
+
+                      <View
+                        style={{
+                          position: "absolute",
+                          right: 0,
+                          height: 40,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: 10,
+                            paddingHorizontal: 10,
+                          }}
+                        >
+                          {item.price || "Produit inconnu"}€
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
+                </>
               )}
+              ListFooterComponent={
+                <View style={{ padding: 20, alignItems: "center" }}>
+                  <Text style={{ color: "gray" }}>
+                    Vous êtes arrivé en bas 🛒
+                  </Text>
+                </View>
+              }
             />
-            {basket.length > 0 && (
-              <Button title="Delete panier" onPress={deleteBasket} />
-            )}
-            <Button title="Fermer" onPress={() => setModalVisible(false)} />
           </View>
         </View>
       </Modal>
@@ -358,52 +518,119 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  image: {
-    width: 200,
-    height: 200,
-    marginVertical: 16,
-    borderRadius: 8,
+const basket_bob = [
+  {
+    product_id: "p1",
+    product_name: "Bouteille d'eau Evian",
+    quantity: 2,
+    barcode: "1234567890123",
+    brand: "Evian",
+    price: 1.5,
   },
-  openButton: {
-    backgroundColor: "#007BFF",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
+  {
+    product_id: "p2",
+    product_name: "Paquet de pâtes Barilla",
+    quantity: 1,
+    barcode: "9876543210987",
+    brand: "Barilla",
+    price: 2.3,
   },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
+  {
+    product_id: "p3",
+    product_name: "Tablette de chocolat Lindt",
+    quantity: 3,
+    barcode: "4567891234567",
+    brand: "Lindt",
+    price: 2.8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
+  {
+    product_id: "p4",
+    product_name: "Pack de yaourts Danone",
+    quantity: 1,
+    barcode: "7894561237894",
+    brand: "Danone",
+    price: 3.2,
   },
-  modalContent: {
-    width: "90%",
-    height: "70%",
-    backgroundColor: "#F8C471",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  {
+    product_id: "p3",
+    product_name: "Tablette de chocolat Lindt",
+    quantity: 3,
+    barcode: "4567891234567",
+    brand: "Lindt",
+    price: 2.8,
   },
-  modalText: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
+  {
+    product_id: "p4",
+    product_name: "Pack de yaourts Danone",
+    quantity: 1,
+    barcode: "7894561237894",
+    brand: "Danone",
+    price: 3.2,
   },
-});
+  {
+    product_id: "p3",
+    product_name: "Tablette de chocolat Lindt",
+    quantity: 3,
+    barcode: "4567891234567",
+    brand: "Lindt",
+    price: 2.8,
+  },
+  {
+    product_id: "p4",
+    product_name: "Pack de yaourts Danone",
+    quantity: 1,
+    barcode: "7894561237894",
+    brand: "Danone",
+    price: 3.2,
+  },
+  {
+    product_id: "p3",
+    product_name: "Tablette de chocolat Lindt",
+    quantity: 3,
+    barcode: "4567891234567",
+    brand: "Lindt",
+    price: 2.8,
+  },
+  {
+    product_id: "p4",
+    product_name: "Pack de yaourts Danone",
+    quantity: 1,
+    barcode: "7894561237894",
+    brand: "Danone",
+    price: 3.2,
+  },
+  {
+    product_id: "p3",
+    product_name: "Tablette de chocolat Lindt",
+    quantity: 3,
+    barcode: "4567891234567",
+    brand: "Lindt",
+    price: 2.8,
+  },
+  {
+    product_id: "p4",
+    product_name: "Pack de yaourts Danone",
+    quantity: 1,
+    barcode: "7894561237894",
+    brand: "Danone",
+    price: 3.2,
+  },
+  {
+    product_id: "p3",
+    product_name: "Tablette de chocolat Lindt",
+    quantity: 3,
+    barcode: "4567891234567",
+    brand: "Lindt",
+    price: 2,
+  },
+  {
+    product_id: "p4",
+    product_name: "Pack de yaourts Danone",
+    quantity: 1,
+    barcode: "7894561237894",
+    brand: "Danone",
+    price: 3,
+  },
+];
 
 export default HomeScreen;
