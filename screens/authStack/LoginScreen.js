@@ -9,11 +9,13 @@ import {
   Image,
   SafeAreaView,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../config";
 import { BackGround } from "../../component/background";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -28,27 +30,45 @@ const LoginScreen = () => {
       Alert.alert("Erreur", error.message);
     }
   };
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={{ flex: 1 }}>
       <BackGround />
-      <SafeAreaView style={{ flex: 1 }}>
-        <Text style={styles.title}>E-kart</Text>
-        <Text style={{ fontSize: 18, textAlign: "center", marginBottom: 18 }}>
-          Connexion
-        </Text>
-        <Text style={{ width: "90%", alignSelf: "center" }}>Email</Text>
+      {/* <SafeAreaView style={{ flex: 1 }}> */}
+      <ScrollView>
+        <View style={{ height: insets.top }} />
+        <View
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 80,
+          }}
+        >
+          <Image
+            style={{
+              top: 0,
+              left: 0,
+            }}
+            source={require("./../../assets/logo_long.png")}
+          />
+        </View>
         <TextInput
           style={{
             width: "90%",
             backgroundColor: "white",
             alignSelf: "center",
-            height: 50,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 8,
+            marginTop: 20,
             paddingHorizontal: 16,
-            marginBottom: 16,
+            paddingVertical: 17,
+            borderRadius: 18,
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+            shadowOffset: {
+              height: 0,
+              width: 0,
+            },
           }}
           placeholder="Email"
           value={email}
@@ -56,17 +76,22 @@ const LoginScreen = () => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <Text style={{ width: "90%", alignSelf: "center" }}>Mot de passe</Text>
         <TextInput
           style={{
             width: "90%",
             backgroundColor: "white",
             alignSelf: "center",
-            height: 50,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 8,
+            marginTop: 20,
             paddingHorizontal: 16,
+            paddingVertical: 17,
+            borderRadius: 18,
+            marginBottom: 16,
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+            shadowOffset: {
+              height: 0,
+              width: 0,
+            },
           }}
           placeholder="Mot de passe"
           value={password}
@@ -89,46 +114,66 @@ const LoginScreen = () => {
             Mot de passe oublié ?
           </Text>
         </TouchableOpacity>
-
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate("SignUp");
-            }}
-          >
-            <Text
-              style={{
-                width: "90%",
-                alignSelf: "center",
-                textAlign: "right",
-                marginBottom: 10,
-                textDecorationLine: "underline",
-              }}
-            >
-              S'inscrire ?
-            </Text>
-          </TouchableOpacity>
+        <View style={{ width: "100%", alignItems: "center" }}>
           <TouchableOpacity
             onPress={handleLogin}
             style={{
-              width: "90%",
-              height: 50,
-              backgroundColor: "black",
-              borderRadius: 8,
+              padding: 12,
+              marginTop: 20,
+              width: 175,
+              height: 45,
+              backgroundColor: "#007A5E",
+              borderRadius: 20,
               alignItems: "center",
               justifyContent: "center",
+              shadowOpacity: 0.5,
+              shadowRadius: 3,
+              shadowColor: "rgba(0,122,84, 1)",
+              shadowOffset: {
+                height: 0,
+                width: 0,
+              },
             }}
           >
             <Text style={{ color: "white" }}>Se connecter</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </ScrollView>
+
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate("CheckForm");
+        }}
+      >
+        <Text
+          style={{
+            alignSelf: "center",
+            bottom: 40,
+            position: "absolute",
+            textDecorationLine: "underline",
+          }}
+        >
+          Version Test Forme
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate("SignUp");
+        }}
+      >
+        <Text
+          style={{
+            alignSelf: "center",
+            bottom: 20,
+            position: "absolute",
+            color: "white",
+            textDecorationLine: "underline",
+          }}
+        >
+          S'inscrire ?
+        </Text>
+      </TouchableOpacity>
+      {/* </SafeAreaView> */}
     </View>
   );
 };

@@ -8,30 +8,23 @@ export const BackGround = () => {
         position: "absolute",
         width: "100%",
         height: "100%",
-        backgroundColor: "#D9D9D9",
+        backgroundColor: "white",
       }}
     >
       <Image
         style={{
-          width: "100%",
-          top: -20,
-          position: "absolute",
+          top: 0,
+          left: 0,
         }}
-        source={require("./../assets/wave_top.png")}
+        source={require("./../assets/Intersect.png")}
       />
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Image
-          style={{ width: 350, height: 350 }}
-          source={require("./../assets/logo Ekart.png")}
-        />
-      </View>
+
       <Image
         style={{
-          width: "100%",
           position: "absolute",
           bottom: 0,
         }}
-        source={require("./../assets/wave.png")}
+        source={require("./../assets/Intersect_bottom.png")}
       />
     </View>
   );

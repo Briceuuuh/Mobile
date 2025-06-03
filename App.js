@@ -10,6 +10,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import LostPassword from "./screens/authStack/LostPassword";
 import SignUp from "./screens/authStack/SignUp";
+import CheckForm from "./screens/CheckForm";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -50,6 +51,11 @@ export default function App() {
         <Stack.Screen
           name="LostPassword"
           component={LostPassword}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CheckForm"
+          component={CheckForm}
           options={{ headerShown: false }}
         />
         <Stack.Screen

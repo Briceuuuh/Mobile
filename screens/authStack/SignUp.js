@@ -8,6 +8,7 @@ import {
   Alert,
   SafeAreaView,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -18,6 +19,9 @@ import {
 import { auth, db } from "../../config";
 import { BackGround } from "../../component/background";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { Image } from "react-native";
+import MyHeader from "../../component/my_header";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SignUp = () => {
   const navigation = useNavigation();
@@ -30,12 +34,12 @@ const SignUp = () => {
       const val = await createUserWithEmailAndPassword(auth, email, password);
       const userRef = doc(db, "client", val?.user?.uid);
       const userDoc = await getDoc(userRef);
-  
+
       if (userDoc.exists()) {
         Alert.alert("Erreur", "L'email existe déjà");
         return;
       }
-  
+
       const newUser = {
         email,
         created_at: new Date().toISOString(),
@@ -44,7 +48,7 @@ const SignUp = () => {
           kart: [],
         },
       };
-  
+
       await setDoc(userRef, newUser);
       navigation.navigate("Login");
     } catch (error) {
@@ -52,26 +56,45 @@ const SignUp = () => {
     }
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={{ flex: 1 }}>
       <BackGround />
-      <SafeAreaView style={{ flex: 1 }}>
-        <Text style={styles.title}>E-kart</Text>
-        <Text style={{ fontSize: 18, textAlign: "center", marginBottom: 18 }}>
-          Inscription
-        </Text>
-        <Text style={{ width: "90%", alignSelf: "center" }}>Email</Text>
+      <MyHeader />
+      <ScrollView>
+        <View style={{ height: insets.top }} />
+        <View
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 80,
+          }}
+        >
+          <Image
+            style={{
+              top: 0,
+              left: 0,
+            }}
+            source={require("./../../assets/logo_long.png")}
+          />
+        </View>
         <TextInput
           style={{
             width: "90%",
             backgroundColor: "white",
             alignSelf: "center",
-            height: 50,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 8,
+            marginTop: 20,
             paddingHorizontal: 16,
-            marginBottom: 16,
+            paddingVertical: 17,
+            borderRadius: 18,
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+            shadowOffset: {
+              height: 0,
+              width: 0,
+            },
           }}
           placeholder="Email"
           value={email}
@@ -79,18 +102,21 @@ const SignUp = () => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <Text style={{ width: "90%", alignSelf: "center" }}>Mot de passe</Text>
         <TextInput
           style={{
             width: "90%",
             backgroundColor: "white",
             alignSelf: "center",
-            height: 50,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 8,
+            marginTop: 20,
             paddingHorizontal: 16,
-            marginBottom: 16,
+            paddingVertical: 17,
+            borderRadius: 18,
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+            shadowOffset: {
+              height: 0,
+              width: 0,
+            },
           }}
           placeholder="Mot de passe"
           value={password}
@@ -99,19 +125,21 @@ const SignUp = () => {
           autoCapitalize="none"
         />
 
-        <Text style={{ width: "90%", alignSelf: "center" }}>
-          Confirmez votre mot de passe
-        </Text>
         <TextInput
           style={{
             width: "90%",
             backgroundColor: "white",
             alignSelf: "center",
-            height: 50,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 8,
+            marginTop: 20,
             paddingHorizontal: 16,
+            paddingVertical: 17,
+            borderRadius: 18,
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+            shadowOffset: {
+              height: 0,
+              width: 0,
+            },
           }}
           placeholder="Mot de passe"
           value={password}
@@ -119,50 +147,35 @@ const SignUp = () => {
           secureTextEntry
           autoCapitalize="none"
         />
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
+        <View style={{ width: "100%", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => {
               handleSignUp();
             }}
             style={{
-              width: "90%",
-              height: 50,
-              backgroundColor: "black",
-              borderRadius: 8,
+              padding: 12,
+              marginTop: 20,
+              width: 175,
+              height: 45,
+              backgroundColor: "#007A5E",
+              borderRadius: 20,
               alignItems: "center",
               justifyContent: "center",
+              shadowOpacity: 0.5,
+              shadowRadius: 3,
+              shadowColor: "rgba(0,122,84, 1)",
+              shadowOffset: {
+                height: 0,
+                width: 0,
+              },
             }}
           >
             <Text style={{ color: "white" }}>S'inscrire</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 16 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-});
 
 export default SignUp;

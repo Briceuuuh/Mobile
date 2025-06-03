@@ -161,7 +161,7 @@ const HomeScreen = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
+        `http://147.93.84.39:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
         {
           method: "POST",
           body: formData,
@@ -181,7 +181,7 @@ const HomeScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <BackGroundCamera />
+      {/* <BackGroundCamera /> */}
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <TouchableOpacity
           onPress={() => {
