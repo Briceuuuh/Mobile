@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  Alert,
+  Dimensions,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { onAuthStateChanged } from "firebase/auth";
@@ -27,6 +29,9 @@ import { useNavigation } from "@react-navigation/native";
 import { Camera, CameraView } from "expo-camera";
 import * as Device from "expo-device";
 import { Picker } from "@react-native-picker/picker";
+import { Path, Svg } from "react-native-svg";
+
+const screenWidth = Dimensions.get("window").width;
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -37,7 +42,7 @@ const HomeScreen = () => {
   const [cameraRef, setCameraRef] = useState(null);
   const [isSimulator, setIsSimulator] = useState(false);
   const navigation = useNavigation();
-  const [stores, setStores] = useState([]); // Liste des magasins
+  const [stores, setStores] = useState([]);
   const [selectedStoreId, setSelectedStoreId] = useState(null);
 
   React.useEffect(() => {
@@ -70,7 +75,7 @@ const HomeScreen = () => {
         }));
         setStores(storesList);
         if (storesList.length > 0) {
-          setSelectedStoreId(storesList[0].id); // Par défaut, sélectionne le premier magasin
+          setSelectedStoreId(storesList[0].id);
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des magasins :", error);
@@ -161,7 +166,7 @@ const HomeScreen = () => {
 
     try {
       const response = await fetch(
-        `http://147.93.84.39:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
+        `http://141.94.105.29:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
         {
           method: "POST",
           body: formData,
@@ -181,7 +186,6 @@ const HomeScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* <BackGroundCamera /> */}
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <TouchableOpacity
           onPress={() => {
@@ -284,21 +288,22 @@ const HomeScreen = () => {
           bottom: 0,
           paddingBottom: 10,
           alignSelf: "center",
-          width: "80%",
+          width: "100%",
           flexDirection: "row",
         }}
         onPress={() => setModalVisible(true)}
       >
-        <Image
-          style={{ width: 50, height: 50 }}
-          source={require("./../assets/logo Ekart.png")}
-        />
+        <Text>Votre panier</Text>
 
         <Text style={{ marginLeft: 10, fontWeight: "bold" }}>
           {basket.length} article{basket.length > 1 ? "s" : ""}
         </Text>
       </TouchableOpacity>
-
+{/* 
+      <Svg height="100" width="100%">
+        <Path d="M0 20 Q100 0 200 20 L200 100 L0 100 Z" fill="skyblue" />
+      </Svg>
+ */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -352,139 +357,6 @@ const HomeScreen = () => {
     </View>
   );
 };
-
-/* const HomeScreens = () => {
-  const [image, setImage] = useState(null);
-  const [user, setUser] = useState(null);
-  const [basket, setBasket] = useState([]);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    const docRef = doc(db, "current_kart", user.uid);
-    const unsubscribe = onSnapshot(
-      docRef,
-      (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const basketData = docSnapshot.data()?.basket || [];
-          setBasket(basketData);
-        } else {
-          setBasket([]);
-        }
-      },
-      (err) => {
-        console.log("Error listening to document:", err);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid]);
-
-  const deleteBasket = async () => {
-    if (!user?.uid) return;
-
-    const docRef = doc(db, "current_kart", user.uid);
-    try {
-      await updateDoc(docRef, {
-        basket: [],
-      });
-      setBasket([]);
-    } catch (error) {
-      console.log("Erreur lors de la suppression du panier :", error);
-    }
-  };
-
-  const pickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      alert("Permission to access camera roll is required!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsEditing: false,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  const sendImage = () => {
-    if (!image) return;
-
-    const formData = new FormData();
-    const uriParts = image.split(".");
-    const fileType = uriParts[uriParts.length - 1];
-    const file = {
-      uri: image,
-      name: `image.${fileType}`,
-      type: `image/${fileType}`,
-    };
-
-    formData.append("image", file);
-    formData.append("id_user", user.uid);
-
-    const requestOptions = {
-      method: "POST",
-      body: formData,
-      redirect: "follow",
-    };
-
-    fetch("https://api-ekart.netlify.app/api/checkProduct", requestOptions)
-      .then((response) => response.text())
-      .then((result) => console.log(result))
-      .catch((error) => console.error(error));
-  };
-
-  return (
-    <View style={styles.container}>
-      {user ? (
-        <>
-          <View style={{ width: "100%" }}>
-            <Text>Panier de l'utilisateur : {user.email}</Text>
-            <Button title="Delete panier" onPress={deleteBasket} />
-          </View>
-          <FlatList
-            style={{ width: "90%" }}
-            data={basket}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={{}}>
-                <Text style={{ fontSize: 20, fontWeight: "800" }}>
-                  {item.product_name || "Produit inconnu"} - {item.price || "0"}
-                  €
-                </Text>
-              </View>
-            )}
-          />
-          <Button title="Pick an image" onPress={pickImage} />
-          {image && (
-            <>
-              <Image source={{ uri: image }} style={styles.image} />
-              <Button title="Send Image" onPress={sendImage} />
-            </>
-          )}
-        </>
-      ) : (
-        <Text>
-          Veuillez vous connecter pour voir votre panier et envoyer des images.
-        </Text>
-      )}
-    </View>
-  );
-}; */
 
 const styles = StyleSheet.create({
   image: {

@@ -34,7 +34,7 @@ const LoginScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <BackGround />
+      <BackGround middle={false}/>
       {/* <SafeAreaView style={{ flex: 1 }}> */}
       <ScrollView>
         <View style={{ height: insets.top }} />
