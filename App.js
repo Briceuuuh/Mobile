@@ -2,33 +2,25 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./screens/HomeScreen";
-import ProfileScreen, { app } from "./screens/ProfileScreen";
+// import ProfileScreen, { app } from "./screens/ProfileScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import LoginScreen from "./screens/authStack/LoginScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+// import { getAuth, onAuthStateChanged } from "firebase/auth";
 import LostPassword from "./screens/authStack/LostPassword";
 import SignUp from "./screens/authStack/SignUp";
 import CheckForm from "./screens/CheckForm";
+import { Text, View } from "react-native";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const auth = getAuth(app);
+// const auth = getAuth(app);
 
 export default function App() {
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState(false);
   const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setInitializing(false);
-    });
-
-    return unsubscribe;
-  }, []);
 
   if (initializing) {
     return null;
