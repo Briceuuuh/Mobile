@@ -11,6 +11,8 @@ import {
   IconSvg,
   IconTickets,
 } from "../icon";
+import { useNavigation } from "@react-navigation/native";
+import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 
 const SettingsScreen = () => {
   const insets = useSafeAreaInsets();
@@ -94,6 +96,8 @@ const ProfileUser = () => {
 };
 
 const ButtonParams = () => {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
+
   return (
     <View style={{ flexDirection: "row", marginTop: 70, marginBottom: 30 }}>
       <TouchableOpacity
@@ -109,6 +113,12 @@ const ButtonParams = () => {
 
       <View style={{ width: 1, height: 200, borderWidth: 1 }} />
       <TouchableOpacity
+        onPress={() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Login" }],
+          });
+        }}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
         <IconSettings />
@@ -123,7 +133,6 @@ const ItemInfos = ({ icon, text }) => {
     <View
       style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
     >
-      {icon}
       <View style={{ width: 10 }} />
       <View
         style={{

@@ -17,15 +17,31 @@ import { auth } from "../../config";
 import { BackGround } from "../../component/background";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { StackNavigationProp } from "@react-navigation/stack";
+
+type AuthStackParamList = {
+  TabStack: undefined;
+  LostPassword: undefined;
+  CheckForm: undefined;
+  SignUp: undefined;
+  Login: undefined;
+  Settings: undefined;
+};
+
+export type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList>;
+
 const LoginScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
 
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate("TabStack");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "TabStack" }],
+      });
     } catch (error) {
       Alert.alert("Erreur", error.message);
     }
@@ -34,7 +50,7 @@ const LoginScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <BackGround middle={false}/>
+      <BackGround middle={false} />
       {/* <SafeAreaView style={{ flex: 1 }}> */}
       <ScrollView>
         <View style={{ height: insets.top }} />

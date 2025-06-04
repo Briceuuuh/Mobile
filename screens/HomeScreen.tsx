@@ -22,7 +22,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { BackGroundCamera } from "../component/background_camera";
-import { IconAcitivate, IconSvg, IconTopArrow } from "../icon";
+import { IconAcitivate, IconLocation, IconSvg, IconTopArrow } from "../icon";
 import { Touchable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -30,6 +30,13 @@ import { Camera, CameraView } from "expo-camera";
 import * as Device from "expo-device";
 import { Picker } from "@react-native-picker/picker";
 import { Path, Svg } from "react-native-svg";
+import {
+  useSafeAreaFrame,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { ModalList } from "../component/modal_list";
+import { ButtonOpenModal } from "../component/button_open_modal";
+import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -41,7 +48,8 @@ const HomeScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
   const [isSimulator, setIsSimulator] = useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
+
   const [stores, setStores] = useState([]);
   const [selectedStoreId, setSelectedStoreId] = useState(null);
 
@@ -101,6 +109,7 @@ const HomeScreen = () => {
         if (docSnapshot.exists()) {
           const basketData = docSnapshot.data()?.current_kart?.kart || [];
           setBasket(basketData);
+          // console.log(basketData);
         } else {
           setBasket([]);
         }
@@ -185,43 +194,84 @@ const HomeScreen = () => {
   };
   // console.log(JSON.stringify(basket,null,2));
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={{ flex: 1, backgroundColor: "lightgray" }}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("Settings");
-          }}
-          style={{
-            zIndex: 999,
-            position: "absolute",
-            right: 30,
-            top: 60,
-            width: 40,
-            height: 40,
-            backgroundColor: "white",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 20,
-          }}
-        >
-          <IconSvg />
-        </TouchableOpacity>
         {user ? (
           <>
-            <Picker
-              selectedValue={selectedStoreId}
-              onValueChange={(itemValue) => setSelectedStoreId(itemValue)}
-              style={{ height: 50, width: 200, marginBottom: 200 }}
+            <View
+              style={{
+                width: "90%",
+                height: 50,
+                borderRadius: 100,
+                backgroundColor: "white",
+                position: "absolute",
+                flexDirection: "row",
+                zIndex: 999,
+                top: insets.top + 10,
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
-              {stores.map((store) => (
-                <Picker.Item
-                  key={store.id}
-                  label={store.name || store.id}
-                  value={store.id}
+              <View>
+                <Image
+                  source={require("../assets/E-VertClair.png")}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    marginVertical: 16,
+                    borderRadius: 8,
+                  }}
                 />
-              ))}
-            </Picker>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    "Changer de magasin",
+                    "Quel magasin souhaitez-vous choisir ?",
+                    stores.map((store) => ({
+                      text: store.name || store.id,
+                      onPress: () => setSelectedStoreId(store.id),
+                    }))
+                  );
+                }}
+              >
+                <View style={{ flexDirection: "row" }}>
+                  <IconLocation />
+                  <Text>{selectedStoreId}</Text>
+                </View>
+                <Text
+                  style={{
+                    textAlign: "center",
+                    fontSize: 10,
+                    color: "#007A5E",
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  Changer
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate("Settings");
+                }}
+              >
+                <Image
+                  source={{
+                    uri: "https://meta-q.cdn.bubble.io/f1717102933566x753149416257430700/Random%20User%20Generator%20.webp",
+                  }}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    marginVertical: 16,
+                    borderRadius: 25,
+                  }}
+                />
+              </TouchableOpacity>
+            </View>
+
             <>
               {!isSimulator ? (
                 <CameraView
@@ -230,33 +280,18 @@ const HomeScreen = () => {
                 >
                   <View
                     style={{
-                      flex: 1,
+                      // flex: 1,
                       width: "100%",
                       backgroundColor: "transparent",
+                      position: "absolute",
+                      top: 2,
                       justifyContent: "flex-end",
                       alignItems: "center",
-                      marginBottom: 20,
+                      // marginBottom: 20,
                     }}
                   >
-                    <View
-                      style={{
-                        flex: 1,
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
-                      <Image
-                        style={{
-                          width: "100%",
-                          top: -30,
-                          position: "absolute",
-                        }}
-                        source={require("./../assets/wave_top.png")}
-                      />
-                    </View>
                     <Button title="Prendre une photo" onPress={takePicture} />
-                    <View style={{ height: 50 }} />
+                    {/* <View style={{ height: 50 }} /> */}
                   </View>
                 </CameraView>
               ) : (
@@ -288,232 +323,14 @@ const HomeScreen = () => {
         )}
       </View>
 
-      <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          alignItems: "center",
-        }}
-      >
-        <Svg height="110" width={screenWidth}>
-          <Path
-            d={`M0 50 Q${
-              screenWidth / 2
-            } -40 ${screenWidth} 50 L${screenWidth} 110 L0 110 Z`}
-            fill="white"
-          />
-        </Svg>
-        <View style={{ position: "absolute", top: 20, alignItems: "center" }}>
-          <IconTopArrow />
-          <Text style={{ fontSize: 10 }}>
-            Votre panier contient {basket.length} article
-            {basket.length > 1 ? "s" : ""}
-          </Text>
-          <Text style={{ fontSize: 25 }}>
-            {basket.reduce((sum, item) => sum + item.price * item.quantity, 0)}€
-          </Text>
-          <Text style={{ fontSize: 10, color: "#FF3333", marginBottom: 10 }}>
-            Auto-paiement à la sortie
-          </Text>
-        </View>
-      </TouchableOpacity>
+      <ButtonOpenModal basket={basket} setModalVisible={setModalVisible} />
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => setModalVisible(!true)}
-            style={{
-              width: "100%",
-              alignItems: "center",
-            }}
-          >
-            <Svg height="110" width={screenWidth}>
-              <Path
-                d={`M0 50 Q${
-                  screenWidth / 2
-                } -40 ${screenWidth} 50 L${screenWidth} 110 L0 110 Z`}
-                fill="white"
-              />
-            </Svg>
-            <View
-              style={{
-                position: "absolute",
-                top: 20,
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <TouchableOpacity
-                onPress={deleteBasket}
-                style={{
-                  position: "absolute",
-                  top: 20,
-                  right: 40,
-                  width: 77,
-                  height: 35,
-                  borderRadius: 17.5,
-                  backgroundColor: "#EC263D",
-                  alignItems: "center",
-                }}
-              >
-                <IconAcitivate />
-                <Text style={{ fontSize: 10, color: "white" }}>Abandon</Text>
-              </TouchableOpacity>
-              <View style={{ transform: [{ rotate: "180deg" }] }}>
-                <IconTopArrow />
-              </View>
-              <Text style={{ fontSize: 10 }}>Votre panier</Text>
-              <Text style={{ fontSize: 25 }}>
-                {basket_bob.reduce(
-                  (sum, item) => sum + item.price * item.quantity,
-                  0
-                )}
-                €
-              </Text>
-              <Text>{""}</Text>
-              <View
-                style={{
-                  left: 0,
-                  flexDirection: "row",
-                  width: "95%",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 10, color: "#FF3333" }}>
-                  Auto-paiement à la sortie
-                </Text>
-                <Text style={{ fontSize: 13 }}>
-                  Nombre d'articles: {basket_bob.length}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          <View
-            style={{
-              width: "100%",
-              height: "70%",
-              bottom: 0,
-              backgroundColor: "white",
-              borderTopWidth: 1,
-              alignItems: "center",
-            }}
-          >
-            <FlatList
-              style={{ width: "100%" }}
-              showsVerticalScrollIndicator={false}
-              data={basket_bob}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <>
-                  <View
-                    style={{
-                      backgroundColor: "#007A5E",
-                      alignSelf: "center",
-                      width: "90%",
-                      marginTop: 15,
-                      paddingTop: 3,
-                      paddingBottom: 3,
-                      paddingLeft: 3,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      borderRadius: 100,
-                    }}
-                  >
-                    <View>
-                      <Image
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 25,
-                          backgroundColor: "white",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          marginRight: 10,
-                        }}
-                        source={require("./../assets/logo Ekart.png")}
-                      />
-                    </View>
-                    <View
-                      style={{
-                        flex: 1,
-                        // backgroundColor: "pink",
-                        height: "100%",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          color: "white",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {item.product_name || "Produit inconnu"}
-                      </Text>
-                      <TouchableOpacity
-                        style={{
-                          position: "absolute",
-                          bottom: 0,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "white",
-                            textDecorationLine: "underline",
-                          }}
-                        >
-                          Info nutrition
-                        </Text>
-                      </TouchableOpacity>
-
-                      <View
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          height: 40,
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            backgroundColor: "white",
-                            borderRadius: 10,
-                            paddingHorizontal: 10,
-                          }}
-                        >
-                          {item.price || "Produit inconnu"}€
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </>
-              )}
-              ListFooterComponent={
-                <View style={{ padding: 20, alignItems: "center" }}>
-                  <Text style={{ color: "gray" }}>
-                    Vous êtes arrivé en bas 🛒
-                  </Text>
-                </View>
-              }
-            />
-          </View>
-        </View>
-      </Modal>
+      <ModalList
+        basket={basket}
+        deleteBasket={deleteBasket}
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+      />
     </View>
   );
 };
