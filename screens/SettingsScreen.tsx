@@ -76,15 +76,8 @@ const ProfileUser = () => {
       <TouchableOpacity onPress={() => {}}>
         <Text
           style={{
-            color: "white",
+            color: "black",
             textDecorationLine: "underline",
-            shadowOpacity: 0.5,
-            shadowRadius: 3,
-            marginBottom: 25,
-            shadowOffset: {
-              height: 0,
-              width: 0,
-            },
           }}
         >
           Editer mes informations
@@ -133,6 +126,7 @@ const ItemInfos = ({ icon, text }) => {
     <View
       style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
     >
+      {icon}
       <View style={{ width: 10 }} />
       <View
         style={{
