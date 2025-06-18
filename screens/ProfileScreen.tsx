@@ -25,6 +25,56 @@ import { auth, db } from "../config";
 import { onAuthStateChanged } from "firebase/auth";
 import { useAuth } from "../authContext";
 
+const getColorBlindTheme = (isColorBlindMode) => {
+  if (isColorBlindMode) {
+    return {
+      primary: '#0066CC',
+      secondary: '#FFD700',
+      success: '#4A90E2',
+      warning: '#FF8C00',
+      danger: '#000000',
+      background: '#F8F9FA',
+      surface: '#FFFFFF',
+      text: '#000000',
+      textSecondary: '#4A4A4A',
+      border: '#CCCCCC',
+      shadow: '#000000',
+      
+      buttonStyle: {
+        borderWidth: 2,
+        borderColor: '#000000',
+      },
+      textStyle: {
+        fontWeight: '600',
+        fontSize: 16,
+      },
+      containerStyle: {
+        borderWidth: 1,
+        borderColor: '#CCCCCC',
+      }
+    };
+  } else {
+    return {
+      // Couleurs normales
+      primary: '#007bff',
+      secondary: '#6c757d',
+      success: '#28a745',
+      warning: '#ffc107',
+      danger: '#dc3545',
+      background: '#f8f9fa',
+      surface: '#ffffff',
+      text: '#000000',
+      textSecondary: '#6c757d',
+      border: '#dee2e6',
+      shadow: '#000000',
+      
+      buttonStyle: {},
+      textStyle: {},
+      containerStyle: {}
+    };
+  }
+};
+
 const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
 
@@ -57,6 +107,11 @@ const ProfileScreen = () => {
 
 const ProfileUser = () => {
   const { user } = useAuth();
+  
+  // Détermine si le mode daltonien est activé
+  const isColorBlindMode = user?.settings?.colorBlindMode || false;
+  const theme = getColorBlindTheme(isColorBlindMode);
+
   const [userInfo, setUserInfo] = useState({
     name: "",
     email: "",
@@ -94,7 +149,6 @@ const ProfileUser = () => {
     }
   };
 
-  // Fonction pour mettre à jour les informations utilisateur
   const updateUserInfo = async () => {
     if (!user?.uid) return;
 
@@ -109,7 +163,6 @@ const ProfileUser = () => {
         updatedAt: new Date().toISOString(),
       });
 
-      // Mettre à jour l'état local
       setUserInfo((prev) => ({
         ...prev,
         ...editedInfo,
@@ -124,7 +177,6 @@ const ProfileUser = () => {
     }
   };
 
-  // Fonction inspirée de deleteBasket pour vider les informations
   const clearUserInfo = async () => {
     if (!user?.uid) return;
 
@@ -177,7 +229,9 @@ const ProfileUser = () => {
   if (loading) {
     return (
       <View style={{ alignItems: "center", width: "100%", marginTop: 50 }}>
-        <Text>Chargement...</Text>
+        <Text style={[theme.textStyle, { color: theme.text }]}>
+          Chargement...
+        </Text>
       </View>
     );
   }
@@ -185,19 +239,26 @@ const ProfileUser = () => {
   return (
     <View style={{ alignItems: "center", width: "100%" }}>
       <View
-        style={{
-          height: 140,
-          width: 140,
-          borderRadius: 70,
-          marginTop: 20,
-          shadowOpacity: 0.5,
-          shadowRadius: 3,
-          marginBottom: 25,
-          shadowOffset: {
-            height: 0,
-            width: 0,
+        style={[
+          {
+            height: 140,
+            width: 140,
+            borderRadius: 70,
+            marginTop: 20,
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+            marginBottom: 25,
+            shadowOffset: {
+              height: 0,
+              width: 0,
+            },
+            shadowColor: theme.shadow,
           },
-        }}
+          isColorBlindMode && {
+            borderWidth: 3,
+            borderColor: theme.primary,
+          }
+        ]}
       >
         <Image
           style={{ width: "100%", height: "100%", borderRadius: 70 }}
@@ -205,30 +266,76 @@ const ProfileUser = () => {
         />
       </View>
 
-      <ItemInfos icon={<IconAccount />} text={userInfo.name} />
-      <ItemInfos icon={<IconMail />} text={userInfo.email} />
-      <ItemInfos icon={<IconPhone />} text={userInfo.phone} />
-      {/* <ItemInfos icon={<IconCard />} text={userInfo.card} /> */}
+      <ItemInfos 
+        icon={<IconAccount />} 
+        text={userInfo.name} 
+        theme={theme}
+        isColorBlindMode={isColorBlindMode}
+      />
+      <ItemInfos 
+        icon={<IconMail />} 
+        text={userInfo.email} 
+        theme={theme}
+        isColorBlindMode={isColorBlindMode}
+      />
+      <ItemInfos 
+        icon={<IconPhone />} 
+        text={userInfo.phone} 
+        theme={theme}
+        isColorBlindMode={isColorBlindMode}
+      />
 
-      <TouchableOpacity onPress={() => setIsEditModalVisible(true)}>
+      <TouchableOpacity 
+        onPress={() => setIsEditModalVisible(true)}
+        style={[
+          theme.buttonStyle,
+          {
+            marginTop: 10,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 5,
+            backgroundColor: theme.primary,
+          }
+        ]}
+      >
         <Text
-          style={{
-            color: "black",
-            textDecorationLine: "underline",
-          }}
+          style={[
+            theme.textStyle,
+            {
+              color: theme.surface,
+              textAlign: 'center',
+            }
+          ]}
         >
-          Editer mes informations
+          {isColorBlindMode ? "✏️ " : ""}Editer mes informations
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={clearUserInfo} style={{ marginTop: 10 }}>
+      <TouchableOpacity 
+        onPress={clearUserInfo} 
+        style={[
+          theme.buttonStyle,
+          {
+            marginTop: 10,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 5,
+            backgroundColor: isColorBlindMode ? theme.danger : 'transparent',
+            borderColor: theme.danger,
+            borderWidth: 2,
+          }
+        ]}
+      >
         <Text
-          style={{
-            color: "red",
-            textDecorationLine: "underline",
-          }}
+          style={[
+            theme.textStyle,
+            {
+              color: isColorBlindMode ? theme.surface : theme.danger,
+              textAlign: 'center',
+            }
+          ]}
         >
-          Effacer mes informations
+          {isColorBlindMode ? "🗑️ " : ""}Effacer mes informations
         </Text>
       </TouchableOpacity>
 
@@ -242,35 +349,54 @@ const ProfileUser = () => {
           style={{
             flex: 1,
             backgroundColor: "rgba(0,0,0,0.5)",
-            justifyContent: "space-around",
+            justifyContent: "center",
             alignItems: "center",
           }}
         >
           <View
-            style={{
-              backgroundColor: "white",
-              width: "90%",
-              padding: 20,
-              borderRadius: 10,
-              maxHeight: "80%",
-            }}
+            style={[
+              {
+                backgroundColor: theme.surface,
+                width: "90%",
+                padding: 20,
+                borderRadius: 10,
+                maxHeight: "80%",
+              },
+              theme.containerStyle
+            ]}
           >
             <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}
+              style={[
+                theme.textStyle,
+                { 
+                  fontSize: 18, 
+                  fontWeight: "bold", 
+                  marginBottom: 20,
+                  color: theme.text,
+                  textAlign: 'center'
+                }
+              ]}
             >
-              Modifier mes informations
+              {isColorBlindMode ? "✏️ " : ""}Modifier mes informations
             </Text>
 
             <ScrollView>
               <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Nom :</Text>
+                <Text style={[theme.textStyle, { marginBottom: 5, color: theme.text }]}>
+                  Nom :
+                </Text>
                 <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
+                  style={[
+                    {
+                      borderWidth: isColorBlindMode ? 2 : 1,
+                      borderColor: theme.border,
+                      padding: 10,
+                      borderRadius: 5,
+                      backgroundColor: theme.surface,
+                      color: theme.text,
+                    },
+                    theme.textStyle
+                  ]}
                   value={
                     editedInfo.name !== undefined
                       ? editedInfo.name
@@ -280,18 +406,26 @@ const ProfileUser = () => {
                     setEditedInfo((prev) => ({ ...prev, name: text }))
                   }
                   placeholder="Votre nom"
+                  placeholderTextColor={theme.textSecondary}
                 />
               </View>
 
               <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Email :</Text>
+                <Text style={[theme.textStyle, { marginBottom: 5, color: theme.text }]}>
+                  Email :
+                </Text>
                 <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
+                  style={[
+                    {
+                      borderWidth: isColorBlindMode ? 2 : 1,
+                      borderColor: theme.border,
+                      padding: 10,
+                      borderRadius: 5,
+                      backgroundColor: theme.surface,
+                      color: theme.text,
+                    },
+                    theme.textStyle
+                  ]}
                   value={
                     editedInfo.email !== undefined
                       ? editedInfo.email
@@ -301,19 +435,27 @@ const ProfileUser = () => {
                     setEditedInfo((prev) => ({ ...prev, email: text }))
                   }
                   placeholder="Votre email"
+                  placeholderTextColor={theme.textSecondary}
                   keyboardType="email-address"
                 />
               </View>
 
               <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Téléphone :</Text>
+                <Text style={[theme.textStyle, { marginBottom: 5, color: theme.text }]}>
+                  Téléphone :
+                </Text>
                 <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
+                  style={[
+                    {
+                      borderWidth: isColorBlindMode ? 2 : 1,
+                      borderColor: theme.border,
+                      padding: 10,
+                      borderRadius: 5,
+                      backgroundColor: theme.surface,
+                      color: theme.text,
+                    },
+                    theme.textStyle
+                  ]}
                   value={
                     editedInfo.phone !== undefined
                       ? editedInfo.phone
@@ -323,30 +465,10 @@ const ProfileUser = () => {
                     setEditedInfo((prev) => ({ ...prev, phone: text }))
                   }
                   placeholder="Votre téléphone"
+                  placeholderTextColor={theme.textSecondary}
                   keyboardType="phone-pad"
                 />
               </View>
-
-              {/* <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Carte :</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
-                  value={
-                    editedInfo.card !== undefined
-                      ? editedInfo.card
-                      : userInfo.card
-                  }
-                  onChangeText={(text) =>
-                    setEditedInfo((prev) => ({ ...prev, card: text }))
-                  }
-                  placeholder="Numéro de carte"
-                />
-              </View> */}
             </ScrollView>
 
             <View
@@ -361,29 +483,43 @@ const ProfileUser = () => {
                   setIsEditModalVisible(false);
                   setEditedInfo({});
                 }}
-                style={{
-                  flex: 1,
-                  padding: 15,
-                  backgroundColor: "#ccc",
-                  borderRadius: 5,
-                  marginRight: 10,
-                }}
+                style={[
+                  {
+                    flex: 1,
+                    padding: 15,
+                    backgroundColor: theme.textSecondary,
+                    borderRadius: 5,
+                    marginRight: 10,
+                  },
+                  theme.buttonStyle
+                ]}
               >
-                <Text style={{ textAlign: "center" }}>Annuler</Text>
+                <Text style={[
+                  theme.textStyle, 
+                  { textAlign: "center", color: theme.surface }
+                ]}>
+                  {isColorBlindMode ? "❌ " : ""}Annuler
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={updateUserInfo}
-                style={{
-                  flex: 1,
-                  padding: 15,
-                  backgroundColor: "#007bff",
-                  borderRadius: 5,
-                  marginLeft: 10,
-                }}
+                style={[
+                  {
+                    flex: 1,
+                    padding: 15,
+                    backgroundColor: theme.primary,
+                    borderRadius: 5,
+                    marginLeft: 10,
+                  },
+                  theme.buttonStyle
+                ]}
               >
-                <Text style={{ textAlign: "center", color: "white" }}>
-                  Sauvegarder
+                <Text style={[
+                  theme.textStyle,
+                  { textAlign: "center", color: theme.surface }
+                ]}>
+                  {isColorBlindMode ? "💾 " : ""}Sauvegarder
                 </Text>
               </TouchableOpacity>
             </View>
@@ -391,44 +527,79 @@ const ProfileUser = () => {
         </View>
       </Modal>
 
-      <ButtonParams />
+      <ButtonParams theme={theme} isColorBlindMode={isColorBlindMode} />
     </View>
   );
 };
 
-const ButtonParams = () => {
+const ButtonParams = ({ theme, isColorBlindMode }) => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   return (
     <View style={{ flexDirection: "row", marginTop: 70, marginBottom: 30 }}>
       <TouchableOpacity
         onPress={() => navigation.navigate("TicketsScreen")}
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={[
+          {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 15,
+            marginRight: 5,
+            borderRadius: 10,
+            backgroundColor: theme.surface,
+          },
+          theme.containerStyle,
+          theme.buttonStyle
+        ]}
       >
         <IconTickets />
-        <Text style={{ marginTop: 20 }}>Tickets</Text>
+        <Text style={[
+          theme.textStyle, 
+          { marginTop: 20, color: theme.text }
+        ]}>
+          {isColorBlindMode ? "🎫 " : ""}Tickets
+        </Text>
       </TouchableOpacity>
 
-      <View style={{ width: 1, height: 200, borderWidth: 1 }} />
+      <View style={{ 
+        width: 2, 
+        height: 100, 
+        backgroundColor: theme.border,
+        marginHorizontal: 10 
+      }} />
 
       <TouchableOpacity
         onPress={() => {
           navigation.navigate("Settings");
         }}
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        style={[
+          {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 15,
+            marginLeft: 5,
+            borderRadius: 10,
+            backgroundColor: theme.surface,
+          },
+          theme.containerStyle,
+          theme.buttonStyle
+        ]}
       >
         <IconSettings />
-        <Text style={{ marginTop: 20 }}>Paramètres</Text>
+        <Text style={[
+          theme.textStyle,
+          { marginTop: 20, color: theme.text }
+        ]}>
+          {isColorBlindMode ? "⚙️ " : ""}Paramètres
+        </Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-const ItemInfos = ({ icon, text }) => {
+const ItemInfos = ({ icon, text, theme, isColorBlindMode }) => {
   return (
     <View
       style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
@@ -436,22 +607,29 @@ const ItemInfos = ({ icon, text }) => {
       {icon}
       <View style={{ width: 10 }} />
       <View
-        style={{
-          width: "75%",
-          backgroundColor: "white",
-          alignItems: "center",
-          justifyContent: "center",
-          paddingVertical: 7,
-          borderRadius: 10,
-          shadowOpacity: 0.5,
-          shadowRadius: 3,
-          shadowOffset: {
-            height: 0,
-            width: 0,
+        style={[
+          {
+            width: "75%",
+            backgroundColor: theme.surface,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 10,
+            paddingHorizontal: 15,
+            borderRadius: 10,
+            shadowOpacity: 0.3,
+            shadowRadius: 3,
+            shadowOffset: {
+              height: 2,
+              width: 0,
+            },
+            shadowColor: theme.shadow,
           },
-        }}
+          theme.containerStyle
+        ]}
       >
-        <Text>{text}</Text>
+        <Text style={[theme.textStyle, { color: theme.text }]}>
+          {text}
+        </Text>
       </View>
     </View>
   );

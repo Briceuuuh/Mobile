@@ -23,25 +23,17 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
-import { BackGroundCamera } from "../component/background_camera";
-import { IconAcitivate, IconLocation, IconSvg, IconTopArrow } from "../icon";
-import { Touchable } from "react-native";
+import { IconLocation } from "../icon";
 import { useNavigation } from "@react-navigation/native";
 
 import { Camera, CameraView } from "expo-camera";
 import * as Device from "expo-device";
-import { Picker } from "@react-native-picker/picker";
-import { Path, Svg } from "react-native-svg";
-import {
-  useSafeAreaFrame,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ModalList } from "../component/modal_list";
 import { ButtonOpenModal } from "../component/button_open_modal";
 import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 import { useAuth } from "../authContext";
-
-const screenWidth = Dimensions.get("window").width;
+import { triggerFeedback } from "../component/trigger_feedback";
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -52,6 +44,9 @@ const HomeScreen = () => {
   const [cameraRef, setCameraRef] = useState(null);
   const [isSimulator, setIsSimulator] = useState(false);
   const navigation = useNavigation<LoginScreenNavigationProp>();
+
+  // user.settings.sounds # son boolean
+  // user.settings.vibrations # son vibrations
 
   const [stores, setStores] = useState([]);
   const [selectedStoreId, setSelectedStoreId] = useState(null);
@@ -72,6 +67,7 @@ const HomeScreen = () => {
       const photo = await cameraRef.takePictureAsync();
       setImage(photo.uri);
       sendImage(photo.uri);
+      triggerFeedback();
     }
   };
 
