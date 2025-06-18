@@ -11,7 +11,15 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LostPassword from "./screens/authStack/LostPassword";
 import SignUp from "./screens/authStack/SignUp";
 import CheckForm from "./screens/CheckForm";
-import { Text, View } from "react-native";
+import {
+  Alert,
+  Button,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import TicketsScreen from "./screens/TicketScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -64,6 +72,11 @@ export default function App() {
           name="Settings"
           component={SettingsScreen}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TicketsScreen"
+          component={TicketsScreen}
+          options={{ headerShown: false, animation: "slide_from_bottom" }}
         />
       </Stack.Navigator>
     </NavigationContainer>

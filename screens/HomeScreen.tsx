@@ -15,10 +15,12 @@ import * as ImagePicker from "expo-image-picker";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../config";
 import {
+  addDoc,
   collection,
   doc,
   getDocs,
   onSnapshot,
+  serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
 import { BackGroundCamera } from "../component/background_camera";
@@ -122,22 +124,150 @@ const HomeScreen = () => {
     return () => unsubscribe();
   }, [user?.uid]);
 
-  const deleteBasket = async () => {
-    if (!user?.uid) return;
+  const abandonBasket = async () => {
+    if (!user?.uid || basket.length === 0) return;
+  
+    Alert.alert(
+      "Abandonner le panier",
+      "Êtes-vous sûr de vouloir abandonner votre panier ?",
+      [
+        { text: "Non", style: "cancel" },
+        {
+          text: "Oui, abandonner",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Calculer le montant total
+              const totalAmount = basket.reduce(
+                (sum, item) => sum + (item.price * (item.quantity || 1)),
+                0
+              );
+  
+              // Créer un ticket avec le statut "cancelled"
+              await createTicket('cancelled', basket, selectedStoreId, totalAmount);
+  
+              // Vider le panier
+              const docRef = doc(db, "client", user.uid);
+              await updateDoc(docRef, {
+                current_kart: {
+                  idStore: "",
+                  kart: [],
+                },
+              });
+  
+              setBasket([]);
+              setModalVisible(false);
+              
+              Alert.alert(
+                "Panier abandonné", 
+                "Votre panier a été abandonné et sauvegardé dans vos tickets."
+              );
+            } catch (error) {
+              console.log("Erreur lors de l'abandon du panier :", error);
+              Alert.alert("Erreur", "Impossible d'abandonner le panier");
+            }
+          }
+        }
+      ]
+    );
+  };
 
-    const docRef = doc(db, "client", user.uid);
+  const processPayment = async () => {
+    if (!user?.uid || basket.length === 0) return;
+  
+    Alert.alert(
+      "Confirmer le paiement",
+      `Montant total: ${basket.reduce(
+        (sum, item) => sum + (item.price * (item.quantity || 1)),
+        0
+      ).toFixed(2)}€\n\nConfirmer le paiement ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Payer",
+          onPress: async () => {
+            try {
+              // Simuler un délai de paiement
+              Alert.alert("Paiement en cours...", "Veuillez patienter");
+  
+              // Calculer le montant total
+              const totalAmount = basket.reduce(
+                (sum, item) => sum + (item.price * (item.quantity || 1)),
+                0
+              );
+  
+              // Créer un ticket avec le statut "completed"
+              await createTicket('completed', basket, selectedStoreId, totalAmount);
+  
+              // Vider le panier après paiement réussi
+              const docRef = doc(db, "client", user.uid);
+              await updateDoc(docRef, {
+                current_kart: {
+                  idStore: "",
+                  kart: [],
+                },
+              });
+  
+              setBasket([]);
+              setModalVisible(false);
+  
+              // Simuler un délai puis afficher succès
+              setTimeout(() => {
+                Alert.alert(
+                  "Paiement réussi ! 🎉",
+                  `Montant payé: ${totalAmount.toFixed(2)}€\nMerci pour votre achat !`,
+                  [
+                    {
+                      text: "Voir mes tickets",
+                      onPress: () => navigation.navigate("TicketsScreen")
+                    },
+                    { text: "OK" }
+                  ]
+                );
+              }, 1500);
+  
+            } catch (error) {
+              console.log("Erreur lors du paiement :", error);
+              Alert.alert("Erreur de paiement", "Le paiement a échoué. Veuillez réessayer.");
+            }
+          }
+        }
+      ]
+    );
+  };
+  
+  
+
+  const createTicket = async (status, basket, selectedStoreId, totalAmount) => {
+    if (!user?.uid) return;
+  
     try {
-      await updateDoc(docRef, {
-        current_kart: {
-          idStore: "",
-          kart: [],
-        },
-      });
-      setBasket([]);
+      const ticketData = {
+        userId: user.uid,
+        status: status, // 'completed' ou 'cancelled'
+        storeName: selectedStoreId,
+        totalAmount: totalAmount,
+        items: basket.map(item => ({
+          name: item.product_name,
+          quantity: item.quantity || 1,
+          price: item.price,
+          image: item.image_link
+        })),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+  
+      const ticketsCollection = collection(db, "tickets");
+      const docRef = await addDoc(ticketsCollection, ticketData);
+      
+      console.log("Ticket créé avec l'ID:", docRef.id);
+      return docRef.id;
     } catch (error) {
-      console.log("Erreur lors de la suppression du panier :", error);
+      console.error("Erreur lors de la création du ticket:", error);
+      throw error;
     }
   };
+  
 
   const pickImage = async () => {
     const permissionResult =
@@ -175,7 +305,7 @@ const HomeScreen = () => {
 
     try {
       const response = await fetch(
-        `http://141.94.105.29:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
+        `http://51.210.212.247:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
         {
           method: "POST",
           body: formData,
@@ -186,7 +316,6 @@ const HomeScreen = () => {
       );
 
       const result = await response.json();
-      console.log("Réponse de l'API :", result);
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'image :", error);
       Alert.alert("Erreur", "L'envoi de l'image a échoué");
@@ -327,7 +456,8 @@ const HomeScreen = () => {
 
       <ModalList
         basket={basket}
-        deleteBasket={deleteBasket}
+        deleteBasket={abandonBasket}
+        processPayment={processPayment}
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
       />
