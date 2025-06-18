@@ -2,29 +2,22 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
-  Image,
   Text,
   TouchableOpacity,
-  TextInput,
-  Modal,
+  Switch,
   Alert,
 } from "react-native";
 import { BackGround } from "../component/background";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  IconAccount,
-  IconCard,
-  IconMail,
-  IconPhone,
   IconSettings,
-  IconSvg,
-  IconTickets,
+  IconAccount,
 } from "../icon";
 import { useNavigation } from "@react-navigation/native";
 import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const SettingsScreen = () => {
   const insets = useSafeAreaInsets();
@@ -42,22 +35,36 @@ const SettingsScreen = () => {
             marginTop: 50,
           }}
         >
-          <Image
+          <IconSettings style={{ marginBottom: 20 }} />
+          <Text
             style={{
-              top: 0,
-              left: 0,
+              fontSize: 24,
+              fontWeight: "bold",
+              marginBottom: 30,
+              color: "#333",
             }}
-            source={require("./../assets/logo_account.png")}
-          />
-          <ProfileUser />
+          >
+            Paramètres
+          </Text>
+          <SettingsContent />
         </View>
       </ScrollView>
     </View>
   );
 };
 
-const ProfileUser = () => {
+const SettingsContent = () => {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // États pour les paramètres
+  const [settings, setSettings] = useState({
+    notifications: true,
+    sounds: true,
+    vibrations: true,
+    colorBlindMode: false,
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -66,19 +73,8 @@ const ProfileUser = () => {
     return unsubscribe;
   }, []);
 
-  const [userInfo, setUserInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    card: "",
-    profileImage:
-      "https://meta-q.cdn.bubble.io/f1717102933566x753149416257430700/Random%20User%20Generator%20.webp",
-  });
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editedInfo, setEditedInfo] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  const fetchUserInfo = async () => {
+  // Récupérer les paramètres depuis Firebase
+  const fetchSettings = async () => {
     if (!user?.uid) return;
 
     try {
@@ -87,91 +83,61 @@ const ProfileUser = () => {
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        setUserInfo({
-          name: userData.name || "Nom non renseigné",
-          email: userData.email || user.email || "Email non renseigné",
-          phone: userData.phone || "Téléphone non renseigné",
-          card: userData.card || "Carte non renseignée",
-          profileImage: userData.profileImage || userInfo.profileImage,
-        });
+        if (userData.settings) {
+          setSettings({
+            notifications: userData.settings.notifications ?? true,
+            sounds: userData.settings.sounds ?? true,
+            vibrations: userData.settings.vibrations ?? true,
+            colorBlindMode: userData.settings.colorBlindMode ?? false,
+          });
+        }
       }
     } catch (error) {
-      console.log("Erreur lors de la récupération des informations :", error);
-      Alert.alert("Erreur", "Impossible de récupérer vos informations");
+      console.log("Erreur lors de la récupération des paramètres :", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fonction pour mettre à jour les informations utilisateur
-  const updateUserInfo = async () => {
+  // Sauvegarder les paramètres dans Firebase
+  const updateSettings = async (newSettings) => {
     if (!user?.uid) return;
 
     try {
       const docRef = doc(db, "client", user.uid);
       await updateDoc(docRef, {
-        name: editedInfo.name || userInfo.name,
-        email: editedInfo.email || userInfo.email,
-        phone: editedInfo.phone || userInfo.phone,
-        card: editedInfo.card || userInfo.card,
-        profileImage: editedInfo.profileImage || userInfo.profileImage,
+        settings: newSettings,
         updatedAt: new Date().toISOString(),
       });
-
-      // Mettre à jour l'état local
-      setUserInfo((prev) => ({
-        ...prev,
-        ...editedInfo,
-      }));
-
-      setIsEditModalVisible(false);
-      setEditedInfo({});
-      Alert.alert("Succès", "Vos informations ont été mises à jour");
+      
+      setSettings(newSettings);
+      Alert.alert("Succès", "Paramètres mis à jour");
     } catch (error) {
-      console.log("Erreur lors de la mise à jour :", error);
-      Alert.alert("Erreur", "Impossible de mettre à jour vos informations");
+      console.log("Erreur lors de la mise à jour des paramètres :", error);
+      Alert.alert("Erreur", "Impossible de sauvegarder les paramètres");
     }
   };
 
-  // Fonction inspirée de deleteBasket pour vider les informations
-  const clearUserInfo = async () => {
-    if (!user?.uid) return;
-
+  // Fonction de déconnexion
+  const handleLogout = () => {
     Alert.alert(
-      "Confirmation",
-      "Êtes-vous sûr de vouloir effacer toutes vos informations ?",
+      "Déconnexion",
+      "Êtes-vous sûr de vouloir vous déconnecter ?",
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: "Confirmer",
+          text: "Déconnexion",
           style: "destructive",
           onPress: async () => {
             try {
-              const docRef = doc(db, "client", user.uid);
-              await updateDoc(docRef, {
-                name: "",
-                phone: "",
-                card: "",
-                profileImage: "",
-                current_kart: {
-                  idStore: "",
-                  kart: [],
-                },
+              await signOut(auth);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
               });
-
-              setUserInfo({
-                name: "Nom non renseigné",
-                email: user.email || "Email non renseigné",
-                phone: "Téléphone non renseigné",
-                card: "Carte non renseignée",
-                profileImage:
-                  "https://meta-q.cdn.bubble.io/f1717102933566x753149416257430700/Random%20User%20Generator%20.webp",
-              });
-
-              Alert.alert("Succès", "Vos informations ont été effacées");
             } catch (error) {
-              console.log("Erreur lors de l'effacement :", error);
-              Alert.alert("Erreur", "Impossible d'effacer vos informations");
+              console.log("Erreur lors de la déconnexion :", error);
+              Alert.alert("Erreur", "Impossible de se déconnecter");
             }
           },
         },
@@ -180,7 +146,7 @@ const ProfileUser = () => {
   };
 
   useEffect(() => {
-    fetchUserInfo();
+    fetchSettings();
   }, [user]);
 
   if (loading) {
@@ -192,281 +158,171 @@ const ProfileUser = () => {
   }
 
   return (
-    <View style={{ alignItems: "center", width: "100%" }}>
-      <View
-        style={{
-          height: 140,
-          width: 140,
-          borderRadius: 70,
-          marginTop: 20,
-          shadowOpacity: 0.5,
-          shadowRadius: 3,
-          marginBottom: 25,
-          shadowOffset: {
-            height: 0,
-            width: 0,
-          },
-        }}
-      >
-        <Image
-          style={{ width: "100%", height: "100%", borderRadius: 70 }}
-          source={{ uri: userInfo.profileImage }}
+    <View style={{ alignItems: "center", width: "100%", paddingHorizontal: 20 }}>
+      
+      {/* Section Notifications */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Notifications</Text>
+        
+        <SettingItem
+          title="Notifications push"
+          description="Recevoir les notifications de l'application"
+          value={settings.notifications}
+          onValueChange={(value) => {
+            const newSettings = { ...settings, notifications: value };
+            updateSettings(newSettings);
+          }}
         />
       </View>
 
-      <ItemInfos icon={<IconAccount />} text={userInfo.name} />
-      <ItemInfos icon={<IconMail />} text={userInfo.email} />
-      <ItemInfos icon={<IconPhone />} text={userInfo.phone} />
-      {/* <ItemInfos icon={<IconCard />} text={userInfo.card} /> */}
-
-      <TouchableOpacity onPress={() => setIsEditModalVisible(true)}>
-        <Text
-          style={{
-            color: "black",
-            textDecorationLine: "underline",
+      {/* Section Audio & Vibrations */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Audio & Vibrations</Text>
+        
+        <SettingItem
+          title="Sons"
+          description="Activer les sons de l'application"
+          value={settings.sounds}
+          onValueChange={(value) => {
+            const newSettings = { ...settings, sounds: value };
+            updateSettings(newSettings);
           }}
-        >
-          Editer mes informations
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={clearUserInfo} style={{ marginTop: 10 }}>
-        <Text
-          style={{
-            color: "red",
-            textDecorationLine: "underline",
+        />
+        
+        <SettingItem
+          title="Vibrations"
+          description="Activer les vibrations"
+          value={settings.vibrations}
+          onValueChange={(value) => {
+            const newSettings = { ...settings, vibrations: value };
+            updateSettings(newSettings);
           }}
-        >
-          Effacer mes informations
-        </Text>
-      </TouchableOpacity>
-
-      {/* Modal d'édition */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="slide"
-        transparent={true}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            justifyContent: "space-around",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "white",
-              width: "90%",
-              padding: 20,
-              borderRadius: 10,
-              maxHeight: "80%",
-            }}
-          >
-            <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}
-            >
-              Modifier mes informations
-            </Text>
-
-            <ScrollView>
-              <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Nom :</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
-                  value={
-                    editedInfo.name !== undefined
-                      ? editedInfo.name
-                      : userInfo.name
-                  }
-                  onChangeText={(text) =>
-                    setEditedInfo((prev) => ({ ...prev, name: text }))
-                  }
-                  placeholder="Votre nom"
-                />
-              </View>
-
-              <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Email :</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
-                  value={
-                    editedInfo.email !== undefined
-                      ? editedInfo.email
-                      : userInfo.email
-                  }
-                  onChangeText={(text) =>
-                    setEditedInfo((prev) => ({ ...prev, email: text }))
-                  }
-                  placeholder="Votre email"
-                  keyboardType="email-address"
-                />
-              </View>
-
-              <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Téléphone :</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
-                  value={
-                    editedInfo.phone !== undefined
-                      ? editedInfo.phone
-                      : userInfo.phone
-                  }
-                  onChangeText={(text) =>
-                    setEditedInfo((prev) => ({ ...prev, phone: text }))
-                  }
-                  placeholder="Votre téléphone"
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              {/* <View style={{ marginBottom: 15 }}>
-                <Text style={{ marginBottom: 5 }}>Carte :</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    padding: 10,
-                    borderRadius: 5,
-                  }}
-                  value={
-                    editedInfo.card !== undefined
-                      ? editedInfo.card
-                      : userInfo.card
-                  }
-                  onChangeText={(text) =>
-                    setEditedInfo((prev) => ({ ...prev, card: text }))
-                  }
-                  placeholder="Numéro de carte"
-                />
-              </View> */}
-            </ScrollView>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginTop: 20,
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => {
-                  setIsEditModalVisible(false);
-                  setEditedInfo({});
-                }}
-                style={{
-                  flex: 1,
-                  padding: 15,
-                  backgroundColor: "#ccc",
-                  borderRadius: 5,
-                  marginRight: 10,
-                }}
-              >
-                <Text style={{ textAlign: "center" }}>Annuler</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={updateUserInfo}
-                style={{
-                  flex: 1,
-                  padding: 15,
-                  backgroundColor: "#007bff",
-                  borderRadius: 5,
-                  marginLeft: 10,
-                }}
-              >
-                <Text style={{ textAlign: "center", color: "white" }}>
-                  Sauvegarder
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <ButtonParams />
-    </View>
-  );
-};
-
-const ButtonParams = () => {
-  const navigation = useNavigation<LoginScreenNavigationProp>();
-
-  return (
-    <View style={{ flexDirection: "row", marginTop: 70, marginBottom: 30 }}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate("TicketsScreen")}
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <IconTickets />
-        <Text style={{ marginTop: 20 }}>Tickets</Text>
-      </TouchableOpacity>
-
-      <View style={{ width: 1, height: 200, borderWidth: 1 }} />
-
-      <TouchableOpacity
-        onPress={() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Login" }],
-          });
-        }}
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-      >
-        <IconSettings />
-        <Text style={{ marginTop: 20 }}>Paramètres</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const ItemInfos = ({ icon, text }) => {
-  return (
-    <View
-      style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-    >
-      {icon}
-      <View style={{ width: 10 }} />
-      <View
-        style={{
-          width: "75%",
-          backgroundColor: "white",
-          alignItems: "center",
-          justifyContent: "center",
-          paddingVertical: 7,
-          borderRadius: 10,
-          shadowOpacity: 0.5,
-          shadowRadius: 3,
-          shadowOffset: {
-            height: 0,
-            width: 0,
-          },
-        }}
-      >
-        <Text>{text}</Text>
+        />
       </View>
+
+      {/* Section Accessibilité */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Accessibilité</Text>
+        
+        <SettingItem
+          title="Mode daltonien"
+          description="Adapter les couleurs pour les personnes daltoniennes"
+          value={settings.colorBlindMode}
+          onValueChange={(value) => {
+            const newSettings = { ...settings, colorBlindMode: value };
+            updateSettings(newSettings);
+          }}
+        />
+      </View>
+
+      {/* Bouton Retour au profil */}
+      <TouchableOpacity 
+        onPress={() => navigation.goBack()}
+        style={[styles.button, styles.profileButton]}
+      >
+        <IconAccount />
+        <Text style={styles.profileButtonText}>Retour au profil</Text>
+      </TouchableOpacity>
+
+      {/* Bouton Déconnexion */}
+      <TouchableOpacity 
+        onPress={handleLogout}
+        style={[styles.button, styles.logoutButton]}
+      >
+        <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+      </TouchableOpacity>
     </View>
   );
+};
+
+const SettingItem = ({ title, description, value, onValueChange }) => {
+  return (
+    <View style={styles.settingItem}>
+      <View style={styles.settingTextContainer}>
+        <Text style={styles.settingTitle}>{title}</Text>
+        <Text style={styles.settingDescription}>{description}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: "#ccc", true: "#007bff" }}
+        thumbColor={value ? "#fff" : "#f4f3f4"}
+      />
+    </View>
+  );
+};
+
+const styles = {
+  sectionContainer: {
+    width: "100%",
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: {
+      height: 2,
+      width: 0,
+    },
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#333",
+  },
+  settingItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  settingTextContainer: {
+    flex: 1,
+    marginRight: 15,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: 4,
+  },
+  settingDescription: {
+    fontSize: 14,
+    color: "#666",
+  },
+  button: {
+    width: "100%",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+    flexDirection: "row",
+  },
+  profileButton: {
+    backgroundColor: "#007bff",
+    marginTop: 20,
+  },
+  profileButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+    marginLeft: 10,
+  },
+  logoutButton: {
+    backgroundColor: "#dc3545",
+    marginBottom: 30,
+  },
+  logoutButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
 };
 
 export default SettingsScreen;

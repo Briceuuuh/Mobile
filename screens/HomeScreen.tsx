@@ -384,7 +384,7 @@ const HomeScreen = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("Settings");
+                  navigation.navigate("Profile");
                 }}
               >
                 <Image

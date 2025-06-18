@@ -27,6 +27,7 @@ type AuthStackParamList = {
   Login: undefined;
   Settings: undefined;
   TicketsScreen: undefined;
+  Profile: undefined;
 };
 
 export type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList>;
