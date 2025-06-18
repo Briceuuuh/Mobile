@@ -33,18 +33,12 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../config";
 import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../authContext";
 
 const TicketsScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, []);
+  const { user } = useAuth();
 
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -39,13 +39,14 @@ import {
 import { ModalList } from "../component/modal_list";
 import { ButtonOpenModal } from "../component/button_open_modal";
 import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
+import { useAuth } from "../authContext";
 
 const screenWidth = Dimensions.get("window").width;
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const { user } = useAuth();
   const [image, setImage] = useState(null);
-  const [user, setUser] = useState(null);
   const [basket, setBasket] = useState([]);
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
@@ -70,7 +71,7 @@ const HomeScreen = () => {
     if (cameraRef) {
       const photo = await cameraRef.takePictureAsync();
       setImage(photo.uri);
-      sendImage();
+      sendImage(photo.uri);
     }
   };
 
@@ -95,13 +96,6 @@ const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
     if (!user?.uid) return;
 
     const docRef = doc(db, "client", user.uid);
@@ -111,7 +105,6 @@ const HomeScreen = () => {
         if (docSnapshot.exists()) {
           const basketData = docSnapshot.data()?.current_kart?.kart || [];
           setBasket(basketData);
-          // console.log(basketData);
         } else {
           setBasket([]);
         }
@@ -126,7 +119,7 @@ const HomeScreen = () => {
 
   const abandonBasket = async () => {
     if (!user?.uid || basket.length === 0) return;
-  
+
     Alert.alert(
       "Abandonner le panier",
       "Êtes-vous sûr de vouloir abandonner votre panier ?",
@@ -139,13 +132,18 @@ const HomeScreen = () => {
             try {
               // Calculer le montant total
               const totalAmount = basket.reduce(
-                (sum, item) => sum + (item.price * (item.quantity || 1)),
+                (sum, item) => sum + item.price * (item.quantity || 1),
                 0
               );
-  
+
               // Créer un ticket avec le statut "cancelled"
-              await createTicket('cancelled', basket, selectedStoreId, totalAmount);
-  
+              await createTicket(
+                "cancelled",
+                basket,
+                selectedStoreId,
+                totalAmount
+              );
+
               // Vider le panier
               const docRef = doc(db, "client", user.uid);
               await updateDoc(docRef, {
@@ -154,33 +152,32 @@ const HomeScreen = () => {
                   kart: [],
                 },
               });
-  
+
               setBasket([]);
               setModalVisible(false);
-              
+
               Alert.alert(
-                "Panier abandonné", 
+                "Panier abandonné",
                 "Votre panier a été abandonné et sauvegardé dans vos tickets."
               );
             } catch (error) {
               console.log("Erreur lors de l'abandon du panier :", error);
               Alert.alert("Erreur", "Impossible d'abandonner le panier");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
 
   const processPayment = async () => {
     if (!user?.uid || basket.length === 0) return;
-  
+
     Alert.alert(
       "Confirmer le paiement",
-      `Montant total: ${basket.reduce(
-        (sum, item) => sum + (item.price * (item.quantity || 1)),
-        0
-      ).toFixed(2)}€\n\nConfirmer le paiement ?`,
+      `Montant total: ${basket
+        .reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)
+        .toFixed(2)}€\n\nConfirmer le paiement ?`,
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -189,16 +186,21 @@ const HomeScreen = () => {
             try {
               // Simuler un délai de paiement
               Alert.alert("Paiement en cours...", "Veuillez patienter");
-  
+
               // Calculer le montant total
               const totalAmount = basket.reduce(
-                (sum, item) => sum + (item.price * (item.quantity || 1)),
+                (sum, item) => sum + item.price * (item.quantity || 1),
                 0
               );
-  
+
               // Créer un ticket avec le statut "completed"
-              await createTicket('completed', basket, selectedStoreId, totalAmount);
-  
+              await createTicket(
+                "completed",
+                basket,
+                selectedStoreId,
+                totalAmount
+              );
+
               // Vider le panier après paiement réussi
               const docRef = doc(db, "client", user.uid);
               await updateDoc(docRef, {
@@ -207,59 +209,61 @@ const HomeScreen = () => {
                   kart: [],
                 },
               });
-  
+
               setBasket([]);
               setModalVisible(false);
-  
+
               // Simuler un délai puis afficher succès
               setTimeout(() => {
                 Alert.alert(
                   "Paiement réussi ! 🎉",
-                  `Montant payé: ${totalAmount.toFixed(2)}€\nMerci pour votre achat !`,
+                  `Montant payé: ${totalAmount.toFixed(
+                    2
+                  )}€\nMerci pour votre achat !`,
                   [
                     {
                       text: "Voir mes tickets",
-                      onPress: () => navigation.navigate("TicketsScreen")
+                      onPress: () => navigation.navigate("TicketsScreen"),
                     },
-                    { text: "OK" }
+                    { text: "OK" },
                   ]
                 );
               }, 1500);
-  
             } catch (error) {
               console.log("Erreur lors du paiement :", error);
-              Alert.alert("Erreur de paiement", "Le paiement a échoué. Veuillez réessayer.");
+              Alert.alert(
+                "Erreur de paiement",
+                "Le paiement a échoué. Veuillez réessayer."
+              );
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
-  
-  
 
   const createTicket = async (status, basket, selectedStoreId, totalAmount) => {
     if (!user?.uid) return;
-  
+
     try {
       const ticketData = {
         userId: user.uid,
         status: status, // 'completed' ou 'cancelled'
         storeName: selectedStoreId,
         totalAmount: totalAmount,
-        items: basket.map(item => ({
+        items: basket.map((item) => ({
           name: item.product_name,
           quantity: item.quantity || 1,
           price: item.price,
-          image: item.image_link
+          image: item.image_link,
         })),
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       };
-  
+
       const ticketsCollection = collection(db, "tickets");
       const docRef = await addDoc(ticketsCollection, ticketData);
-      
+
       console.log("Ticket créé avec l'ID:", docRef.id);
       return docRef.id;
     } catch (error) {
@@ -267,7 +271,6 @@ const HomeScreen = () => {
       throw error;
     }
   };
-  
 
   const pickImage = async () => {
     const permissionResult =
@@ -289,16 +292,22 @@ const HomeScreen = () => {
     }
   };
 
-  const sendImage = async () => {
-    if (!image) {
+  const sendImage = async (image_params = null) => {
+    if (!image_params && !isSimulator) {
+      Alert.alert("Erreur", "Aucune image sélectionnée");
+      return;
+    }
+    if (!image && isSimulator) {
       Alert.alert("Erreur", "Aucune image sélectionnée");
       return;
     }
 
-    const fileType = image.split(".").pop();
+    const fileType = isSimulator
+      ? image.split(".").pop()
+      : image_params.split(".").pop();
     const formData = new FormData();
     formData.append("image", {
-      uri: image,
+      uri: isSimulator ? image : image_params,
       name: `image.${fileType}`,
       type: `image/${fileType}`,
     });
@@ -316,6 +325,7 @@ const HomeScreen = () => {
       );
 
       const result = await response.json();
+      console.log(result);
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'image :", error);
       Alert.alert("Erreur", "L'envoi de l'image a échoué");
@@ -411,9 +421,10 @@ const HomeScreen = () => {
                     style={{
                       // flex: 1,
                       width: "100%",
+                      zIndex: 999,
                       backgroundColor: "transparent",
                       position: "absolute",
-                      top: 2,
+                      bottom: 120,
                       justifyContent: "flex-end",
                       alignItems: "center",
                       // marginBottom: 20,

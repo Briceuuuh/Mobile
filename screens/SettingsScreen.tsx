@@ -9,15 +9,13 @@ import {
 } from "react-native";
 import { BackGround } from "../component/background";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  IconSettings,
-  IconAccount,
-} from "../icon";
+import { IconSettings, IconAccount } from "../icon";
 import { useNavigation } from "@react-navigation/native";
 import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useAuth } from "../authContext";
 
 const SettingsScreen = () => {
   const insets = useSafeAreaInsets();
@@ -55,9 +53,9 @@ const SettingsScreen = () => {
 
 const SettingsContent = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  
+
   // États pour les paramètres
   const [settings, setSettings] = useState({
     notifications: true,
@@ -65,13 +63,6 @@ const SettingsContent = () => {
     vibrations: true,
     colorBlindMode: false,
   });
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, []);
 
   // Récupérer les paramètres depuis Firebase
   const fetchSettings = async () => {
@@ -109,7 +100,7 @@ const SettingsContent = () => {
         settings: newSettings,
         updatedAt: new Date().toISOString(),
       });
-      
+
       setSettings(newSettings);
       Alert.alert("Succès", "Paramètres mis à jour");
     } catch (error) {
@@ -120,29 +111,25 @@ const SettingsContent = () => {
 
   // Fonction de déconnexion
   const handleLogout = () => {
-    Alert.alert(
-      "Déconnexion",
-      "Êtes-vous sûr de vouloir vous déconnecter ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Déconnexion",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut(auth);
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Login" }],
-              });
-            } catch (error) {
-              console.log("Erreur lors de la déconnexion :", error);
-              Alert.alert("Erreur", "Impossible de se déconnecter");
-            }
-          },
+    Alert.alert("Déconnexion", "Êtes-vous sûr de vouloir vous déconnecter ?", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Déconnexion",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut(auth);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Login" }],
+            });
+          } catch (error) {
+            console.log("Erreur lors de la déconnexion :", error);
+            Alert.alert("Erreur", "Impossible de se déconnecter");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   useEffect(() => {
@@ -158,12 +145,13 @@ const SettingsContent = () => {
   }
 
   return (
-    <View style={{ alignItems: "center", width: "100%", paddingHorizontal: 20 }}>
-      
+    <View
+      style={{ alignItems: "center", width: "100%", paddingHorizontal: 20 }}
+    >
       {/* Section Notifications */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Notifications</Text>
-        
+
         <SettingItem
           title="Notifications push"
           description="Recevoir les notifications de l'application"
@@ -178,7 +166,7 @@ const SettingsContent = () => {
       {/* Section Audio & Vibrations */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Audio & Vibrations</Text>
-        
+
         <SettingItem
           title="Sons"
           description="Activer les sons de l'application"
@@ -188,7 +176,7 @@ const SettingsContent = () => {
             updateSettings(newSettings);
           }}
         />
-        
+
         <SettingItem
           title="Vibrations"
           description="Activer les vibrations"
@@ -203,7 +191,7 @@ const SettingsContent = () => {
       {/* Section Accessibilité */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Accessibilité</Text>
-        
+
         <SettingItem
           title="Mode daltonien"
           description="Adapter les couleurs pour les personnes daltoniennes"
@@ -216,7 +204,7 @@ const SettingsContent = () => {
       </View>
 
       {/* Bouton Retour au profil */}
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => navigation.goBack()}
         style={[styles.button, styles.profileButton]}
       >
@@ -225,7 +213,7 @@ const SettingsContent = () => {
       </TouchableOpacity>
 
       {/* Bouton Déconnexion */}
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={handleLogout}
         style={[styles.button, styles.logoutButton]}
       >

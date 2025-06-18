@@ -11,6 +11,7 @@ import SignUp from "./screens/authStack/SignUp";
 import CheckForm from "./screens/CheckForm";
 import TicketsScreen from "./screens/TicketScreen";
 import ProfileScreen from "./screens/ProfileScreen";
+import { AuthProvider } from "./authContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -26,55 +27,57 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={user ? "TabStack" : "Login"}
-        screenOptions={{
-          headerShown: true,
-          headerStyle: {},
-        }}
-      >
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="LostPassword"
-          component={LostPassword}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="CheckForm"
-          component={CheckForm}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SignUp"
-          component={SignUp}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="TabStack"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="TicketsScreen"
-          component={TicketsScreen}
-          options={{ headerShown: false, animation: "slide_from_bottom" }}
-        />
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={user ? "TabStack" : "Login"}
+          screenOptions={{
+            headerShown: true,
+            headerStyle: {},
+          }}
+        >
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="LostPassword"
+            component={LostPassword}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CheckForm"
+            component={CheckForm}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SignUp"
+            component={SignUp}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TabStack"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TicketsScreen"
+            component={TicketsScreen}
+            options={{ headerShown: false, animation: "slide_from_bottom" }}
+          />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }

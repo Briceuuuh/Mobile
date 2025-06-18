@@ -23,6 +23,7 @@ import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config";
 import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../authContext";
 
 const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
@@ -55,15 +56,7 @@ const ProfileScreen = () => {
 };
 
 const ProfileUser = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, []);
-
+  const { user } = useAuth();
   const [userInfo, setUserInfo] = useState({
     name: "",
     email: "",

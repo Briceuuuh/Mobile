@@ -22,11 +22,9 @@ import { getStorage, ref, uploadBytes } from "firebase/storage";
 
 const CheckForm = () => {
   const [image, setImage] = useState(null);
-  const [user, setUser] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
   const [isSimulator, setIsSimulator] = useState(false);
-  const [selectedStoreId, setSelectedStoreId] = useState(null);
 
   React.useEffect(() => {
     (async () => {
