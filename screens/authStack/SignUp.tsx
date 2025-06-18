@@ -22,9 +22,10 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Image } from "react-native";
 import MyHeader from "../../component/my_header";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LoginScreenNavigationProp } from "./LoginScreen";
 
 const SignUp = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
 
@@ -60,7 +61,7 @@ const SignUp = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <BackGround />
+      <BackGround middle={false}/>
       <MyHeader />
       <ScrollView>
         <View style={{ height: insets.top }} />

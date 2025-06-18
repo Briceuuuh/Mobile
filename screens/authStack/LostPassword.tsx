@@ -37,7 +37,7 @@ const LostPassword = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <BackGround />
+      <BackGround middle={false} />
       <MyHeader />
       <ScrollView>
         <View style={{ height: insets.top }} />

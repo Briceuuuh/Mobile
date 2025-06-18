@@ -53,7 +53,7 @@ const SettingsScreen = () => {
 
 const SettingsContent = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
   const [loading, setLoading] = useState(true);
 
   // États pour les paramètres
@@ -103,6 +103,7 @@ const SettingsContent = () => {
 
       setSettings(newSettings);
       Alert.alert("Succès", "Paramètres mis à jour");
+      refreshUserData();
     } catch (error) {
       console.log("Erreur lors de la mise à jour des paramètres :", error);
       Alert.alert("Erreur", "Impossible de sauvegarder les paramètres");

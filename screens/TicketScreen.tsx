@@ -396,6 +396,7 @@ const TicketsScreen = () => {
 
                   {selectedTicket.storeName && (
                     <TicketDetailItem
+                      icon={null}
                       label="Magasin"
                       value={selectedTicket.storeName}
                     />

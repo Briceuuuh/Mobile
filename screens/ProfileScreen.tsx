@@ -101,11 +101,11 @@ const ProfileUser = () => {
     try {
       const docRef = doc(db, "client", user.uid);
       await updateDoc(docRef, {
-        name: editedInfo.name || userInfo.name,
-        email: editedInfo.email || userInfo.email,
-        phone: editedInfo.phone || userInfo.phone,
-        card: editedInfo.card || userInfo.card,
-        profileImage: editedInfo.profileImage || userInfo.profileImage,
+        name: editedInfo?.name || userInfo.name,
+        email: editedInfo?.email || userInfo.email,
+        phone: editedInfo?.phone || userInfo.phone,
+        card: editedInfo?.card || userInfo.card,
+        profileImage: editedInfo?.profileImage || userInfo.profileImage,
         updatedAt: new Date().toISOString(),
       });
 
