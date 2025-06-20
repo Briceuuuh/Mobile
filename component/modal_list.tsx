@@ -29,20 +29,26 @@ export const ModalList = ({
   const [loading, setLoading] = useState(false);
 
   // Calculer le total du panier
-  const totalAmount = basket.reduce(
-    (sum, item) => sum + (item.price * (item.quantity || 1)),
-    0
-  );
+  const totalAmount = basket.reduce((sum, item) => {
+    const price = parseFloat(item?.price);
+    const quantity = item?.quantity || 1;
+  
+    if (!isNaN(price)) {
+      return sum + price * quantity;
+    }
+  
+    return sum;
+  }, 0);
 
   // Fonction pour récupérer les informations nutritionnelles
   const fetchNutritionInfo = async (product) => {
     setLoading(true);
     setSelectedProduct(product);
-    
+
     try {
       // Extraire le code-barres du produit
       const barcode = product.barcode || product.code || product.id;
-      
+
       if (!barcode) {
         Alert.alert("Erreur", "Code-barres du produit introuvable");
         setLoading(false);
@@ -52,10 +58,10 @@ export const ModalList = ({
       const response = await fetch(
         `https://world.openfoodfacts.net/api/v2/product/${barcode}.json`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': 'Basic ' + btoa('off:off'),
-            'Content-Type': 'application/json',
+            Authorization: "Basic " + btoa("off:off"),
+            "Content-Type": "application/json",
           },
         }
       );
@@ -67,14 +73,14 @@ export const ModalList = ({
         setShowNutrition(true);
       } else {
         Alert.alert(
-          "Information non disponible", 
+          "Information non disponible",
           "Les informations nutritionnelles pour ce produit ne sont pas disponibles dans notre base de données."
         );
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des données:', error);
+      console.error("Erreur lors de la récupération des données:", error);
       Alert.alert(
-        "Erreur de connexion", 
+        "Erreur de connexion",
         "Impossible de récupérer les informations nutritionnelles. Vérifiez votre connexion internet."
       );
     } finally {
@@ -86,13 +92,15 @@ export const ModalList = ({
   const NutritionInfo = ({ data }) => {
     const nutriments = data.nutriments || {};
     const ingredients = data.ingredients_text || "Non disponible";
-    
+
     return (
       <ScrollView style={{ flex: 1 }}>
         <View style={{ padding: 20 }}>
           {/* Informations générales */}
           <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+            >
               Informations générales
             </Text>
             <Text style={{ marginBottom: 5 }}>
@@ -111,7 +119,9 @@ export const ModalList = ({
 
           {/* Ingrédients */}
           <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+            >
               Ingrédients
             </Text>
             <Text style={{ lineHeight: 20 }}>{ingredients}</Text>
@@ -119,62 +129,118 @@ export const ModalList = ({
 
           {/* Informations nutritionnelles */}
           <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+            >
               Valeurs nutritionnelles (pour 100g/100ml)
             </Text>
-            
+
             {Object.keys(nutriments).length > 0 ? (
               <View>
                 {nutriments.energy_kj && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Énergie (kJ)</Text>
                     <Text>{nutriments.energy_kj} kJ</Text>
                   </View>
                 )}
                 {nutriments.energy_kcal && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Énergie (kcal)</Text>
                     <Text>{nutriments.energy_kcal} kcal</Text>
                   </View>
                 )}
                 {nutriments.fat && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Matières grasses</Text>
                     <Text>{nutriments.fat} g</Text>
                   </View>
                 )}
                 {nutriments.carbohydrates && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Glucides</Text>
                     <Text>{nutriments.carbohydrates} g</Text>
                   </View>
                 )}
                 {nutriments.sugars && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
-                    <Text>  dont sucres</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
+                    <Text> dont sucres</Text>
                     <Text>{nutriments.sugars} g</Text>
                   </View>
                 )}
                 {nutriments.proteins && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Protéines</Text>
                     <Text>{nutriments.proteins} g</Text>
                   </View>
                 )}
                 {nutriments.salt && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Sel</Text>
                     <Text>{nutriments.salt} g</Text>
                   </View>
                 )}
                 {nutriments.fiber && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Fibres</Text>
                     <Text>{nutriments.fiber} g</Text>
                   </View>
                 )}
                 {nutriments.sodium && (
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 5,
+                    }}
+                  >
                     <Text>Sodium</Text>
                     <Text>{nutriments.sodium} mg</Text>
                   </View>
@@ -190,20 +256,26 @@ export const ModalList = ({
           {/* Nutri-Score */}
           {data.nutriscore_grade && (
             <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+              >
                 Nutri-Score
               </Text>
-              <View style={{
-                backgroundColor: getNutriScoreColor(data.nutriscore_grade),
-                padding: 10,
-                borderRadius: 5,
-                alignItems: "center"
-              }}>
-                <Text style={{ 
-                  color: "white", 
-                  fontSize: 20, 
-                  fontWeight: "bold" 
-                }}>
+              <View
+                style={{
+                  backgroundColor: getNutriScoreColor(data.nutriscore_grade),
+                  padding: 10,
+                  borderRadius: 5,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 20,
+                    fontWeight: "bold",
+                  }}
+                >
                   {data.nutriscore_grade.toUpperCase()}
                 </Text>
               </View>
@@ -213,7 +285,9 @@ export const ModalList = ({
           {/* Allergènes */}
           {data.allergens && (
             <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+              >
                 Allergènes
               </Text>
               <Text>{data.allergens}</Text>
@@ -227,12 +301,18 @@ export const ModalList = ({
   // Fonction pour obtenir la couleur du Nutri-Score
   const getNutriScoreColor = (grade) => {
     switch (grade.toLowerCase()) {
-      case 'a': return '#038141';
-      case 'b': return '#85BB2F';
-      case 'c': return '#FECB02';
-      case 'd': return '#EE8100';
-      case 'e': return '#E63312';
-      default: return '#666';
+      case "a":
+        return "#038141";
+      case "b":
+        return "#85BB2F";
+      case "c":
+        return "#FECB02";
+      case "d":
+        return "#EE8100";
+      case "e":
+        return "#E63312";
+      default:
+        return "#666";
     }
   };
 
@@ -253,23 +333,27 @@ export const ModalList = ({
       >
         {/* Vue des informations nutritionnelles */}
         {showNutrition && nutritionData ? (
-          <View style={{
-            width: "100%",
-            height: "90%",
-            backgroundColor: "white",
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          }}>
-            {/* Header */}
-            <View style={{
-              backgroundColor: "#007A5E",
-              padding: 15,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
+          <View
+            style={{
+              width: "100%",
+              height: "90%",
+              backgroundColor: "white",
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
-            }}>
+            }}
+          >
+            {/* Header */}
+            <View
+              style={{
+                backgroundColor: "#007A5E",
+                padding: 15,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+              }}
+            >
               <TouchableOpacity
                 onPress={() => setShowNutrition(false)}
                 style={{
@@ -282,16 +366,20 @@ export const ModalList = ({
                   marginRight: 10,
                 }}
               >
-                <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
+                <Text
+                  style={{ color: "white", fontSize: 18, fontWeight: "bold" }}
+                >
                   ←
                 </Text>
               </TouchableOpacity>
-              <Text style={{
-                color: "white",
-                fontSize: 18,
-                fontWeight: "bold",
-                flex: 1,
-              }}>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  flex: 1,
+                }}
+              >
                 Informations nutritionnelles
               </Text>
               <TouchableOpacity
@@ -308,7 +396,9 @@ export const ModalList = ({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
+                <Text
+                  style={{ color: "white", fontSize: 18, fontWeight: "bold" }}
+                >
                   ×
                 </Text>
               </TouchableOpacity>
@@ -378,7 +468,9 @@ export const ModalList = ({
                   }}
                   disabled={basket.length === 0}
                 >
-                  <Text style={{ fontSize: 10, color: "white", fontWeight: "bold" }}>
+                  <Text
+                    style={{ fontSize: 10, color: "white", fontWeight: "bold" }}
+                  >
                     Payer
                   </Text>
                 </TouchableOpacity>
@@ -420,11 +512,13 @@ export const ModalList = ({
               }}
             >
               {basket.length === 0 ? (
-                <View style={{ 
-                  flex: 1, 
-                  justifyContent: "center", 
-                  alignItems: "center" 
-                }}>
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   <Text style={{ fontSize: 16, color: "#666" }}>
                     Votre panier est vide
                   </Text>
@@ -438,134 +532,182 @@ export const ModalList = ({
                   showsVerticalScrollIndicator={false}
                   data={basket}
                   keyExtractor={(item, index) => index.toString()}
-                  renderItem={({ item }) => (
-                    <View
-                      style={{
-                        backgroundColor: "#007A5E",
-                        alignSelf: "center",
-                        width: "90%",
-                        marginTop: 15,
-                        paddingTop: 3,
-                        paddingBottom: 3,
-                        paddingLeft: 3,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        borderRadius: 100,
-                      }}
-                    >
-                      <View>
-                        <Image
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 25,
-                            backgroundColor: "white",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginRight: 10,
-                          }}
-                          source={{ uri: item?.image_link }}
-                        />
-                      </View>
+                  renderItem={({ item }) =>
+                    item.message ? (
                       <View
                         style={{
-                          flex: 1,
-                          height: "100%",
+                          backgroundColor: "#007A5E",
+                          alignSelf: "center",
+                          width: "90%",
+                          marginTop: 15,
+                          paddingTop: 3,
+                          paddingBottom: 3,
+                          paddingLeft: 3,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          borderRadius: 100,
                         }}
                       >
-                        <Text
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            color: "white",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {item.product_name || "Produit inconnu"}
-                        </Text>
-                        <TouchableOpacity
-                          style={{
-                            position: "absolute",
-                            bottom: 0,
-                          }}
-                          onPress={() => fetchNutritionInfo(item)}
-                          disabled={loading}
-                        >
-                          <Text
-                            style={{
-                              color: "white",
-                              textDecorationLine: "underline",
-                            }}
-                          >
-                            {loading && selectedProduct === item ? 
-                              "Chargement..." : "Info nutrition"
-                            }
-                          </Text>
-                        </TouchableOpacity>
-
                         <View
                           style={{
-                            position: "absolute",
-                            right: 0,
-                            height: 40,
-                            justifyContent: "center",
-                            flexDirection: "row",
-                            alignItems: "center",
+                            flex: 1,
+                            paddingHorizontal: 20,
+                            height: "100%",
                           }}
                         >
-                          {item.quantity && item.quantity > 1 && (
+                          <Text
+                            numberOfLines={2}
+                            style={{
+                              color: "white",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {item?.message}
+                          </Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View
+                        style={{
+                          backgroundColor: "#007A5E",
+                          alignSelf: "center",
+                          width: "90%",
+                          marginTop: 15,
+                          paddingTop: 3,
+                          paddingBottom: 3,
+                          paddingLeft: 3,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          borderRadius: 100,
+                        }}
+                      >
+                        <View>
+                          <Image
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 25,
+                              backgroundColor: "white",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginRight: 10,
+                            }}
+                            source={{ uri: item?.image_link }}
+                          />
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            height: "100%",
+                          }}
+                        >
+                          <Text
+                            lineBreakMode="head"
+                            numberOfLines={1}
+                            style={{
+                              position: "absolute",
+                              width: "80%",
+                              top: 0,
+                              color: "white",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {item?.product_name || "Produit inconnu"}
+                          </Text>
+                          <TouchableOpacity
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                            }}
+                            onPress={() => fetchNutritionInfo(item)}
+                            disabled={loading}
+                          >
+                            <Text
+                              style={{
+                                color: "white",
+                                textDecorationLine: "underline",
+                              }}
+                            >
+                              {loading && selectedProduct === item
+                                ? "Chargement..."
+                                : "Info nutrition"}
+                            </Text>
+                          </TouchableOpacity>
+
+                          <View
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              height: 40,
+                              justifyContent: "center",
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                          >
+                            {item?.quantity && item?.quantity > 1 && (
+                              <Text
+                                style={{
+                                  backgroundColor: "white",
+                                  borderRadius: 10,
+                                  paddingHorizontal: 8,
+                                  marginRight: 5,
+                                  fontSize: 12,
+
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                x{item.quantity}
+                              </Text>
+                            )}
                             <Text
                               style={{
                                 backgroundColor: "white",
                                 borderRadius: 10,
-                                paddingHorizontal: 8,
-                                marginRight: 5,
-                                fontSize: 12,
+                                paddingHorizontal: 10,
                                 fontWeight: "bold",
                               }}
                             >
-                              x{item.quantity}
+                              {(
+                                (item.price || 0) * (item.quantity || 1)
+                              ).toFixed(2)}
+                              €
                             </Text>
-                          )}
-                          <Text
-                            style={{
-                              backgroundColor: "white",
-                              borderRadius: 10,
-                              paddingHorizontal: 10,
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {((item.price || 0) * (item.quantity || 1)).toFixed(2)}€
-                          </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
-                  )}
+                    )
+                  }
                   ListFooterComponent={
                     <View style={{ padding: 20, alignItems: "center" }}>
                       <Text style={{ color: "gray" }}>
                         Vous êtes arrivé en bas 🛒
                       </Text>
-                      <View style={{ 
-                        marginTop: 10, 
-                        padding: 15, 
-                        backgroundColor: "#f8f9fa", 
-                        borderRadius: 10,
-                        width: "90%"
-                      }}>
-                        <Text style={{ 
-                          textAlign: "center", 
-                          fontWeight: "bold", 
-                          fontSize: 16 
-                        }}>
+                      <View
+                        style={{
+                          marginTop: 10,
+                          padding: 15,
+                          backgroundColor: "#f8f9fa",
+                          borderRadius: 10,
+                          width: "90%",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            fontSize: 16,
+                          }}
+                        >
                           Total: {totalAmount.toFixed(2)}€
                         </Text>
-                        <Text style={{ 
-                          textAlign: "center", 
-                          color: "#666", 
-                          marginTop: 5 
-                        }}>
-                          {basket.length} article{basket.length > 1 ? 's' : ''}
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            color: "#666",
+                            marginTop: 5,
+                          }}
+                        >
+                          {basket.length} article{basket.length > 1 ? "s" : ""}
                         </Text>
                       </View>
                     </View>

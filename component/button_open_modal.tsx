@@ -1,15 +1,20 @@
-import {
-  TouchableOpacity,
-  View,
-  Text,
-  Dimensions,
-} from "react-native";
+import { TouchableOpacity, View, Text, Dimensions } from "react-native";
 import { Path, Svg } from "react-native-svg";
 import { IconTopArrow } from "../icon";
 
 const screenWidth = Dimensions.get("window").width;
 
 export const ButtonOpenModal = ({ setModalVisible, basket }) => {
+  const totalAmount = basket.reduce((sum, item) => {
+    const price = parseFloat(item?.price);
+    const quantity = item?.quantity || 1;
+
+    if (!isNaN(price)) {
+      return sum + price * quantity;
+    }
+
+    return sum;
+  }, 0);
   return (
     <TouchableOpacity
       onPress={() => setModalVisible(true)}
@@ -34,13 +39,7 @@ export const ButtonOpenModal = ({ setModalVisible, basket }) => {
           Votre panier contient {basket.length} article
           {basket.length > 1 ? "s" : ""}
         </Text>
-        <Text style={{ fontSize: 25 }}>
-          {basket.reduce(
-            (sum: any, item: any) => sum + item.price * item.quantity,
-            0
-          )}
-          €
-        </Text>
+        <Text style={{ fontSize: 25 }}>{totalAmount}€</Text>
         <Text style={{ fontSize: 10, color: "#FF3333", marginBottom: 10 }}>
           Auto-paiement à la sortie
         </Text>
