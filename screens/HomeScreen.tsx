@@ -18,6 +18,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   serverTimestamp,
@@ -25,7 +26,7 @@ import {
 } from "firebase/firestore";
 import { IconLocation } from "../icon";
 import { useNavigation } from "@react-navigation/native";
-
+import { useAudioPlayer } from "expo-audio";
 import { Camera, CameraView } from "expo-camera";
 import * as Device from "expo-device";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,7 +36,11 @@ import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 import { useAuth } from "../authContext";
 import { triggerFeedback } from "../component/trigger_feedback";
 
+const audioSource = require("/Users/bricehuet/delivery/eip/AppMobile/assets/sounds/feedback.mp3");
+
 const HomeScreen = () => {
+  const player = useAudioPlayer(audioSource);
+
   const [modalVisible, setModalVisible] = useState(false);
   const { user } = useAuth();
   const [image, setImage] = useState(null);
@@ -65,6 +70,10 @@ const HomeScreen = () => {
   const takePicture = async () => {
     if (cameraRef) {
       const photo = await cameraRef.takePictureAsync();
+      if (user.settings.sounds) {
+        player.seekTo(0);
+        player.play();
+      }
       setImage(photo.uri);
       sendImage(photo.uri);
       triggerFeedback();
@@ -82,13 +91,13 @@ const HomeScreen = () => {
         }));
         setStores(storesList);
         if (storesList.length > 0) {
-          setSelectedStoreId(storesList[0].id);
+          setSelectedStoreId(storesList[2].id);
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des magasins :", error);
       }
     };
-    fetchStores();
+    if (isSimulator) fetchStores();
   }, []);
 
   useEffect(() => {
@@ -113,8 +122,13 @@ const HomeScreen = () => {
     return () => unsubscribe();
   }, [user?.uid]);
 
+  const validBasketLength = basket.filter(
+    (item) =>
+      typeof item?.price === "number" && !isNaN(item.price) && item.product_name
+  ).length;
+
   const abandonBasket = async () => {
-    if (!user?.uid || basket.length === 0) return;
+    if (!user?.uid || validBasketLength === 0) return;
 
     Alert.alert(
       "Abandonner le panier",
@@ -127,10 +141,16 @@ const HomeScreen = () => {
           onPress: async () => {
             try {
               // Calculer le montant total
-              const totalAmount = basket.reduce(
-                (sum, item) => sum + item.price * (item.quantity || 1),
-                0
-              );
+              const totalAmount = basket.reduce((sum, item) => {
+                const price = parseFloat(item?.price);
+                const quantity = item?.quantity || 1;
+
+                if (!isNaN(price)) {
+                  return sum + price * quantity;
+                }
+
+                return sum;
+              }, 0);
 
               // Créer un ticket avec le statut "cancelled"
               await createTicket(
@@ -167,7 +187,7 @@ const HomeScreen = () => {
   };
 
   const processPayment = async () => {
-    if (!user?.uid || basket.length === 0) return;
+    if (!user?.uid || validBasketLength === 0) return;
 
     Alert.alert(
       "Confirmer le paiement",
@@ -184,10 +204,16 @@ const HomeScreen = () => {
               Alert.alert("Paiement en cours...", "Veuillez patienter");
 
               // Calculer le montant total
-              const totalAmount = basket.reduce(
-                (sum, item) => sum + item.price * (item.quantity || 1),
-                0
-              );
+              const totalAmount = basket.reduce((sum, item) => {
+                const price = parseFloat(item?.price);
+                const quantity = item?.quantity || 1;
+
+                if (!isNaN(price)) {
+                  return sum + price * quantity;
+                }
+
+                return sum;
+              }, 0);
 
               // Créer un ticket avec le statut "completed"
               await createTicket(
@@ -246,21 +272,68 @@ const HomeScreen = () => {
         userId: user.uid,
         status: status, // 'completed' ou 'cancelled'
         storeName: selectedStoreId,
-        totalAmount: totalAmount,
-        items: basket.map((item) => ({
-          name: item.product_name,
-          quantity: item.quantity || 1,
-          price: item.price,
-          image: item.image_link,
-        })),
+        totalAmount: totalAmount.toFixed(2),
+        items: basket
+          .filter(
+            (item) => typeof item?.price === "number" && !isNaN(item.price)
+          )
+          .map((item) => ({
+            product_id: item.product_id,
+            name: item.product_name,
+            quantity: item.quantity || 1,
+            price: item.price,
+            image: item.image_link || "",
+          })),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
+
+      console.log(ticketData);
 
       const ticketsCollection = collection(db, "tickets");
       const docRef = await addDoc(ticketsCollection, ticketData);
 
       console.log("Ticket créé avec l'ID:", docRef.id);
+
+      // 🚀 Si status = completed, mettre à jour item_sold
+      if (status === "completed") {
+        const storeRef = doc(db, "commerce", selectedStoreId);
+        const storeSnap = await getDoc(storeRef);
+
+        if (storeSnap.exists()) {
+          const storeData = storeSnap.data();
+          const currentProducts = storeData.products || [];
+
+          // Mettre à jour les item_sold
+          const updatedProducts = currentProducts.map((product) => {
+            // Chercher si le produit est dans le panier
+            const soldItem = ticketData.items.find(
+              (item) => item.product_id === product.product_id
+            );
+
+            if (soldItem) {
+              return {
+                ...product,
+                item_sold: (product.item_sold || 0) + soldItem.quantity,
+              };
+            } else {
+              return product;
+            }
+          });
+
+          // Sauvegarder
+          await updateDoc(storeRef, {
+            products: updatedProducts,
+          });
+
+          console.log("Produits mis à jour après vente.");
+        } else {
+          console.warn(
+            "Le store n'existe pas pour mettre à jour les produits."
+          );
+        }
+      }
+
       return docRef.id;
     } catch (error) {
       console.error("Erreur lors de la création du ticket:", error);
@@ -301,6 +374,9 @@ const HomeScreen = () => {
     const fileType = isSimulator
       ? image.split(".").pop()
       : image_params.split(".").pop();
+
+    console.log(fileType);
+
     const formData = new FormData();
     formData.append("image", {
       uri: isSimulator ? image : image_params,
@@ -327,9 +403,52 @@ const HomeScreen = () => {
       Alert.alert("Erreur", "L'envoi de l'image a échoué");
     }
   };
-  // console.log(JSON.stringify(basket,null,2));
 
   const insets = useSafeAreaInsets();
+
+  if (!isSimulator && !selectedStoreId)
+    return (
+      <CameraView
+        style={{
+          flex: 1,
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        ref={(ref) => setCameraRef(ref)}
+        barcodeScannerSettings={{
+          barcodeTypes: ["qr"],
+        }}
+        onBarcodeScanned={({ data }) => {
+          console.log(data);
+          setSelectedStoreId(data);
+        }}
+      >
+        <View
+          style={{
+            width: 200,
+            height: 200,
+            borderWidth: 4,
+            zIndex: 999,
+            alignSelf: "center",
+            alignItems: "center",
+          }}
+        ></View>
+        <View
+          style={{
+            marginTop: 10,
+            paddingHorizontal: 10,
+            paddingVertical: 10,
+            backgroundColor: "white",
+            borderRadius: 10,
+          }}
+        >
+          <Text style={{ fontWeight: "bold" }}>
+            Veuillez scanner le QrCode du commerce
+          </Text>
+        </View>
+      </CameraView>
+    );
 
   return (
     <View style={{ flex: 1, backgroundColor: "lightgray" }}>
@@ -366,10 +485,17 @@ const HomeScreen = () => {
                   Alert.alert(
                     "Changer de magasin",
                     "Quel magasin souhaitez-vous choisir ?",
-                    stores.map((store) => ({
-                      text: store.name || store.id,
-                      onPress: () => setSelectedStoreId(store.id),
-                    }))
+                    isSimulator
+                      ? stores.map((store) => ({
+                          text: store.name || store.id,
+                          onPress: () => setSelectedStoreId(store.id),
+                        }))
+                      : [
+                          {
+                            text: "Disconnect",
+                            onPress: () => setSelectedStoreId(null),
+                          },
+                        ]
                   );
                 }}
               >
@@ -473,3 +599,27 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
+
+// export default function HomeScreen() {
+//   const player = useAudioPlayer(audioSource);
+
+//   return (
+//     <View
+//       style={{
+//         flex: 1,
+//         justifyContent: "center",
+//         backgroundColor: "#ecf0f1",
+//         padding: 10,
+//       }}
+//     >
+//       <Button title="Play Sound" onPress={() => player.play()} />
+//       <Button
+//         title="Replay Sound"
+//         onPress={() => {
+//           player.seekTo(0);
+//           player.play();
+//         }}
+//       />
+//     </View>
+//   );
+// }

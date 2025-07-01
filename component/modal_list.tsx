@@ -28,6 +28,15 @@ export const ModalList = ({
   const [nutritionData, setNutritionData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // console.log(basket[basket.length - 1])
+
+  const validBasketLength = basket.filter(
+    item =>
+      typeof item?.price === 'number' &&
+      !isNaN(item.price) &&
+      item.product_name
+  ).length;
+
   // Calculer le total du panier
   const totalAmount = basket.reduce((sum, item) => {
     const price = parseFloat(item?.price);
@@ -462,11 +471,11 @@ export const ModalList = ({
                     width: 77,
                     height: 35,
                     borderRadius: 17.5,
-                    backgroundColor: basket.length > 0 ? "#28a745" : "#6c757d",
+                    backgroundColor: validBasketLength > 0 ? "#28a745" : "#6c757d",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
-                  disabled={basket.length === 0}
+                  disabled={validBasketLength === 0}
                 >
                   <Text
                     style={{ fontSize: 10, color: "white", fontWeight: "bold" }}
@@ -496,7 +505,7 @@ export const ModalList = ({
                     Auto-paiement à la sortie
                   </Text>
                   <Text style={{ fontSize: 13 }}>
-                    Nombre d'articles: {basket.length}
+                    Nombre d'articles: {validBasketLength}
                   </Text>
                 </View>
               </View>
@@ -511,7 +520,7 @@ export const ModalList = ({
                 alignItems: "center",
               }}
             >
-              {basket.length === 0 ? (
+              {validBasketLength === 0 ? (
                 <View
                   style={{
                     flex: 1,
@@ -707,7 +716,7 @@ export const ModalList = ({
                             marginTop: 5,
                           }}
                         >
-                          {basket.length} article{basket.length > 1 ? "s" : ""}
+                          {validBasketLength} article{validBasketLength > 1 ? "s" : ""}
                         </Text>
                       </View>
                     </View>

@@ -25,11 +25,14 @@ export const BackGround = ({ middle }) => {
             width: "100%",
             height: "100%",
             position: "absolute",
+            right: 0,
+            left: 0,
             justifyContent: "center",
           }}
         >
           <Image
             style={{
+              width: "100%",
               marginTop: 80,
             }}
             source={require("./../assets/Intersect_account.png")}
@@ -40,6 +43,9 @@ export const BackGround = ({ middle }) => {
           style={{
             position: "absolute",
             bottom: 0,
+            right: 0,
+            left: 0,
+            width: "100%",
           }}
           source={require("./../assets/Intersect_bottom.png")}
         />

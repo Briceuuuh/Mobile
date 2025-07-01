@@ -15,6 +15,13 @@ export const ButtonOpenModal = ({ setModalVisible, basket }) => {
 
     return sum;
   }, 0);
+
+  const validBasketLength = basket.filter(
+    item =>
+      typeof item?.price === 'number' &&
+      !isNaN(item.price) &&
+      item.product_name
+  ).length;
   return (
     <TouchableOpacity
       onPress={() => setModalVisible(true)}
@@ -36,10 +43,10 @@ export const ButtonOpenModal = ({ setModalVisible, basket }) => {
       <View style={{ position: "absolute", top: 20, alignItems: "center" }}>
         <IconTopArrow />
         <Text style={{ fontSize: 10 }}>
-          Votre panier contient {basket.length} article
-          {basket.length > 1 ? "s" : ""}
+          Votre panier contient {validBasketLength} article
+          {validBasketLength > 1 ? "s" : ""}
         </Text>
-        <Text style={{ fontSize: 25 }}>{totalAmount}€</Text>
+        <Text style={{ fontSize: 25 }}>{totalAmount.toFixed(2)}€</Text>
         <Text style={{ fontSize: 10, color: "#FF3333", marginBottom: 10 }}>
           Auto-paiement à la sortie
         </Text>

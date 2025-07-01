@@ -90,57 +90,6 @@ const TicketsScreen = () => {
     return tickets.filter((ticket) => ticket.status === filter);
   };
 
-  // Fonction pour formater la date
-  const formatDate = (timestamp) => {
-    if (!timestamp) return "Date inconnue";
-    const date = new Date(
-      timestamp.seconds ? timestamp.seconds * 1000 : timestamp
-    );
-    return date.toLocaleString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Fonction pour obtenir la couleur du statut
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "#28a745";
-      case "cancelled":
-        return "#dc3545";
-      default:
-        return "#6c757d";
-    }
-  };
-
-  // Fonction pour obtenir le texte du statut
-  const getStatusText = (status) => {
-    switch (status) {
-      case "completed":
-        return "Terminé";
-      case "cancelled":
-        return "Annulé";
-      default:
-        return "Inconnu";
-    }
-  };
-
-  // Fonction pour obtenir l'icône du statut
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "completed":
-        return <IconCard />;
-      case "cancelled":
-        return <IconCard />;
-      default:
-        return <IconTickets />;
-    }
-  };
-
   useEffect(() => {
     fetchTickets();
   }, [user?.uid]);
@@ -313,7 +262,9 @@ const TicketsScreen = () => {
                     </Text>
                   </View>
                   <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                    {item.totalAmount ? `${item.totalAmount}€` : "N/A"}
+                    {typeof item?.totalAmount === "number"
+                      ? `${item.totalAmount.toFixed(2)}€`
+                      : "N/A"}
                   </Text>
                 </View>
               </View>
