@@ -37,6 +37,8 @@ export const ModalList = ({
       item.product_name
   ).length;
 
+  const realBasketLength = basket.length;
+
   // Calculer le total du panier
   const totalAmount = basket.reduce((sum, item) => {
     const price = parseFloat(item?.price);
@@ -520,7 +522,7 @@ export const ModalList = ({
                 alignItems: "center",
               }}
             >
-              {validBasketLength === 0 ? (
+              {realBasketLength === 0 ? (
                 <View
                   style={{
                     flex: 1,
@@ -542,7 +544,7 @@ export const ModalList = ({
                   data={basket}
                   keyExtractor={(item, index) => index.toString()}
                   renderItem={({ item }) =>
-                    item.message ? (
+                    item.product_name === "null" ? (
                       <View
                         style={{
                           backgroundColor: "#007A5E",
