@@ -37,7 +37,7 @@ import { useAuth } from "../authContext";
 import { triggerFeedback } from "../component/trigger_feedback";
 import * as Haptics from 'expo-haptics';
 
-const audioSource = require("/Users/bricehuet/delivery/eip/AppMobile/assets/sounds/feedback.mp3");
+const audioSource = require("/Users/bricehuet/delivery/eip/Mobile/assets/sounds/feedback.mp3");
 
 const HomeScreen = () => {
   const player = useAudioPlayer(audioSource);
@@ -55,7 +55,7 @@ const HomeScreen = () => {
   // user.settings.vibrations # son vibrations
 
   const [stores, setStores] = useState([]);
-  const [selectedStoreId, setSelectedStoreId] = useState("new_store");
+  const [selectedStoreId, setSelectedStoreId] = useState("store_eip");
 
   React.useEffect(() => {
     (async () => {

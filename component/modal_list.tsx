@@ -31,10 +31,8 @@ export const ModalList = ({
   // console.log(basket[basket.length - 1])
 
   const validBasketLength = basket.filter(
-    item =>
-      typeof item?.price === 'number' &&
-      !isNaN(item.price) &&
-      item.product_name
+    (item) =>
+      typeof item?.price === "number" && !isNaN(item.price) && item.product_name
   ).length;
 
   const realBasketLength = basket.length;
@@ -43,11 +41,11 @@ export const ModalList = ({
   const totalAmount = basket.reduce((sum, item) => {
     const price = parseFloat(item?.price);
     const quantity = item?.quantity || 1;
-  
+
     if (!isNaN(price)) {
       return sum + price * quantity;
     }
-  
+
     return sum;
   }, 0);
 
@@ -473,7 +471,8 @@ export const ModalList = ({
                     width: 77,
                     height: 35,
                     borderRadius: 17.5,
-                    backgroundColor: validBasketLength > 0 ? "#28a745" : "#6c757d",
+                    backgroundColor:
+                      validBasketLength > 0 ? "#28a745" : "#6c757d",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
@@ -593,7 +592,7 @@ export const ModalList = ({
                         }}
                       >
                         <View>
-                          <Image
+                          {/* <Image
                             style={{
                               width: 40,
                               height: 40,
@@ -604,6 +603,19 @@ export const ModalList = ({
                               marginRight: 10,
                             }}
                             source={{ uri: item?.image_link }}
+                            onError={() => setError(true)}
+                          /> */}
+                          <FallbackImage
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 25,
+                              backgroundColor: "white",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginRight: 10,
+                            }}
+                            uri={item?.image_link}
                           />
                         </View>
                         <View
@@ -718,7 +730,8 @@ export const ModalList = ({
                             marginTop: 5,
                           }}
                         >
-                          {validBasketLength} article{validBasketLength > 1 ? "s" : ""}
+                          {validBasketLength} article
+                          {validBasketLength > 1 ? "s" : ""}
                         </Text>
                       </View>
                     </View>
@@ -730,5 +743,23 @@ export const ModalList = ({
         )}
       </View>
     </Modal>
+  );
+};
+
+const FallbackImage = ({ uri, style }) => {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <Image
+      style={style}
+      source={
+        failed
+          ? {
+              uri: "https://www.shutterstock.com/image-vector/box-icon-logo-modern-line-600nw-517561594.jpg",
+            }
+          : { uri }
+      }
+      onError={() => setFailed(true)}
+    />
   );
 };
