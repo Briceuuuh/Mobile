@@ -16,7 +16,7 @@ import { AuthProvider } from "./authContext";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// const auth = getAuth(app); t
+// const auth = getAuth(app); 
 
 export default function App() {
   const [initializing, setInitializing] = useState(false);
