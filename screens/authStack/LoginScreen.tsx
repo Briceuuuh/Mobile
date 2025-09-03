@@ -39,15 +39,43 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
+      if (!email || !password) {
+        Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+        return;
+      }
+
       await signInWithEmailAndPassword(auth, email, password);
       navigation.reset({
         index: 0,
         routes: [{ name: "TabStack" }],
       });
-    } catch (error) {
-      Alert.alert("Erreur", error.message);
+    } catch (error: any) {
+      let message = "Une erreur est survenue. Veuillez réessayer.";
+
+      console.log(error.code);
+
+      switch (error.code) {
+        case "auth/invalid-email":
+          message = "L'adresse email est invalide.";
+          break;
+        case "auth/user-disabled":
+          message = "Ce compte a été désactivé.";
+          break;
+        case "auth/user-not-found":
+          message = "Aucun utilisateur trouvé avec cet email.";
+          break;
+        case "auth/invalid-credential":
+          message = "L'adresse email est invalide ou mot de passe incorrect.";
+          break;
+        case "auth/too-many-requests":
+          message = "Trop de tentatives. Réessayez plus tard.";
+          break;
+      }
+
+      Alert.alert("Erreur de connexion", message);
     }
   };
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -158,7 +186,7 @@ const LoginScreen = () => {
         </View>
       </ScrollView>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => {
           navigation.navigate("CheckForm");
         }}
@@ -173,7 +201,7 @@ const LoginScreen = () => {
         >
           Version Test Forme
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <TouchableOpacity
         onPress={() => {
           navigation.navigate("SignUp");

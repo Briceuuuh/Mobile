@@ -37,7 +37,8 @@ import { useAuth } from "../authContext";
 import { triggerFeedback } from "../component/trigger_feedback";
 import * as Haptics from 'expo-haptics';
 
-const audioSource = require("/Users/bricehuet/delivery/eip/Mobile/assets/sounds/feedback.mp3");
+const audioSource = require("../assets/sounds/feedback.mp3");
+
 
 const HomeScreen = () => {
   const player = useAudioPlayer(audioSource);

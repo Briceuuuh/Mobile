@@ -28,16 +28,28 @@ const SignUp = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
+  const [confirmPassword, setConfirmPassword] = useState("Password");
 
   const handleSignUp = async () => {
     try {
-      await signOut(auth);
+      if (!email || !password || !confirmPassword) {
+        Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        Alert.alert("Erreur", "Les mots de passe ne correspondent pas.");
+        return;
+      }
+
+      await signOut(auth); // pour éviter un conflit si quelqu'un est connecté
       const val = await createUserWithEmailAndPassword(auth, email, password);
+
       const userRef = doc(db, "client", val?.user?.uid);
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists()) {
-        Alert.alert("Erreur", "L'email existe déjà");
+        Alert.alert("Erreur", "Un compte existe déjà avec cet email.");
         return;
       }
 
@@ -51,9 +63,25 @@ const SignUp = () => {
       };
 
       await setDoc(userRef, newUser);
+
+      Alert.alert("Succès", "Votre compte a été créé avec succès !");
       navigation.navigate("Login");
-    } catch (error) {
-      Alert.alert("Erreur", error.message);
+    } catch (error: any) {
+      let message = "Une erreur est survenue. Veuillez réessayer.";
+
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          message = "Cette adresse email est déjà utilisée.";
+          break;
+        case "auth/invalid-email":
+          message = "L'adresse email est invalide.";
+          break;
+        case "auth/weak-password":
+          message = "Le mot de passe est trop faible (minimum 6 caractères).";
+          break;
+      }
+
+      Alert.alert("Erreur", message);
     }
   };
 
@@ -61,7 +89,7 @@ const SignUp = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <BackGround middle={false}/>
+      <BackGround middle={false} />
       <MyHeader />
       <ScrollView>
         <View style={{ height: insets.top }} />
@@ -142,9 +170,9 @@ const SignUp = () => {
               width: 0,
             },
           }}
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
+          placeholder="Confirmer votre mot de passe"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
           secureTextEntry
           autoCapitalize="none"
         />

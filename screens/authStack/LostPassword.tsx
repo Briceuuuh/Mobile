@@ -29,9 +29,32 @@ const LostPassword = () => {
 
   const handleLostPassword = async () => {
     try {
+      if (!email) {
+        Alert.alert("Erreur", "Veuillez entrer votre adresse email.");
+        return;
+      }
+
       await sendPasswordResetEmail(auth, email);
-    } catch (error) {
-      Alert.alert("Erreur", error.message);
+      Alert.alert(
+        "Succès",
+        "Un email de réinitialisation de mot de passe a été envoyé."
+      );
+    } catch (error: any) {
+      let message = "Une erreur est survenue. Veuillez réessayer.";
+
+      switch (error.code) {
+        case "auth/invalid-email":
+          message = "L'adresse email est invalide.";
+          break;
+        case "auth/user-not-found":
+          message = "Aucun utilisateur trouvé avec cet email.";
+          break;
+        case "auth/missing-email":
+          message = "Veuillez saisir une adresse email.";
+          break;
+      }
+
+      Alert.alert("Erreur", message);
     }
   };
 

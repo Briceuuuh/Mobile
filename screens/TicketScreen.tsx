@@ -34,6 +34,12 @@ import {
 import { auth, db } from "../config";
 import { onAuthStateChanged } from "firebase/auth";
 import { useAuth } from "../authContext";
+import {
+  formatDate,
+  getStatusColor,
+  getStatusIcon,
+  getStatusText,
+} from "../component/getStatus";
 
 const TicketsScreen = () => {
   const insets = useSafeAreaInsets();
@@ -198,78 +204,80 @@ const TicketsScreen = () => {
               </Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => {
-                setSelectedTicket(item);
-                setIsDetailModalVisible(true);
-              }}
-              style={{
-                backgroundColor: "white",
-                borderRadius: 15,
-                padding: 20,
-                marginTop: 15,
-                shadowOpacity: 0.5,
-                shadowRadius: 5,
-                shadowOffset: { height: 2, width: 0 },
-              }}
-            >
-              <View
+          renderItem={({ item }) => {
+            return (
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedTicket(item);
+                  setIsDetailModalVisible(true);
+                }}
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  backgroundColor: "white",
+                  borderRadius: 15,
+                  padding: 20,
+                  marginTop: 15,
+                  shadowOpacity: 0.5,
+                  shadowRadius: 5,
+                  shadowOffset: { height: 2, width: 0 },
                 }}
               >
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: "bold",
-                      marginBottom: 5,
-                    }}
-                  >
-                    Ticket #{item.id.substring(0, 8)}
-                  </Text>
-                  <Text
-                    style={{ fontSize: 14, color: "#666", marginBottom: 5 }}
-                  >
-                    {item.storeName || "Magasin inconnu"}
-                  </Text>
-                  <Text style={{ fontSize: 12, color: "#999" }}>
-                    {formatDate(item.createdAt)}
-                  </Text>
-                </View>
-
-                <View style={{ alignItems: "center" }}>
-                  <View
-                    style={{
-                      backgroundColor: getStatusColor(item.status),
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 15,
-                      marginBottom: 5,
-                    }}
-                  >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
                     <Text
                       style={{
-                        color: "white",
-                        fontSize: 12,
+                        fontSize: 16,
                         fontWeight: "bold",
+                        marginBottom: 5,
                       }}
                     >
-                      {getStatusText(item.status)}
+                      Ticket #{item.id.substring(0, 8)}
+                    </Text>
+                    <Text
+                      style={{ fontSize: 14, color: "#666", marginBottom: 5 }}
+                    >
+                      {item.storeName || "Magasin inconnu"}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: "#999" }}>
+                      {formatDate(item.createdAt)}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                    {typeof item?.totalAmount === "number"
-                      ? `${item.totalAmount.toFixed(2)}€`
-                      : "N/A"}
-                  </Text>
+
+                  <View style={{ alignItems: "center" }}>
+                    <View
+                      style={{
+                        backgroundColor: getStatusColor(item.status),
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 15,
+                        marginBottom: 5,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 12,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {getStatusText(item.status)}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                      {item?.totalAmount
+                        ? `${item?.totalAmount}€`
+                        : "N/A"}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
 
