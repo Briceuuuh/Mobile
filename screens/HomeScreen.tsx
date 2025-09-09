@@ -131,7 +131,7 @@ const HomeScreen = () => {
   ).length;
 
   const abandonBasket = async () => {
-    if (!user?.uid || validBasketLength === 0) return;
+    if (!user?.uid ) return;
 
     Alert.alert(
       "Abandonner le panier",
