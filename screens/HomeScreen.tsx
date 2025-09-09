@@ -35,10 +35,9 @@ import { ButtonOpenModal } from "../component/button_open_modal";
 import { LoginScreenNavigationProp } from "./authStack/LoginScreen";
 import { useAuth } from "../authContext";
 import { triggerFeedback } from "../component/trigger_feedback";
-import * as Haptics from 'expo-haptics';
+import * as Haptics from "expo-haptics";
 
 const audioSource = require("../assets/sounds/feedback.mp3");
-
 
 const HomeScreen = () => {
   const player = useAudioPlayer(audioSource);
@@ -72,7 +71,7 @@ const HomeScreen = () => {
   const takePicture = async () => {
     if (cameraRef) {
       const photo = await cameraRef.takePictureAsync({
-        quality: 0.1
+        quality: 0.1,
       });
       if (user.settings.sounds) {
         player.seekTo(0);
@@ -390,8 +389,8 @@ const HomeScreen = () => {
 
     try {
       const response = await fetch(
-        // `http://51.210.212.247:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
-        `http://82.25.119.208:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
+        `http://51.210.212.247:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
+        // `http://82.25.119.208:3000/client/checkProduct/${selectedStoreId}/${user?.uid}`,
         {
           method: "POST",
           body: formData,
