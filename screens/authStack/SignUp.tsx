@@ -23,12 +23,14 @@ import { Image } from "react-native";
 import MyHeader from "../../component/my_header";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginScreenNavigationProp } from "./LoginScreen";
+import { IconEyeClose, IconEyeOpen } from "../../icon";
 
 const SignUp = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
   const [confirmPassword, setConfirmPassword] = useState("Password");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignUp = async () => {
     try {
@@ -131,51 +133,68 @@ const SignUp = () => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <TextInput
+        <View
           style={{
             width: "90%",
+            flexDirection: "row",
+            alignItems: "center",
             backgroundColor: "white",
             alignSelf: "center",
             marginTop: 20,
-            paddingHorizontal: 16,
-            paddingVertical: 17,
             borderRadius: 18,
+            marginBottom: 16,
             shadowOpacity: 0.5,
             shadowRadius: 3,
-            shadowOffset: {
-              height: 0,
-              width: 0,
-            },
+            shadowOffset: { height: 0, width: 0 },
           }}
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-
-        <TextInput
+        >
+          <TextInput
+            style={{
+              flex: 1,
+              paddingHorizontal: 16,
+              paddingVertical: 17,
+            }}
+            placeholder="Mot de passe"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={{ paddingHorizontal: 12 }}
+          >
+            {showPassword ? <IconEyeOpen /> : <IconEyeClose />}
+          </TouchableOpacity>
+        </View>
+        <View
           style={{
             width: "90%",
+            flexDirection: "row",
+            alignItems: "center",
             backgroundColor: "white",
             alignSelf: "center",
-            marginTop: 20,
-            paddingHorizontal: 16,
-            paddingVertical: 17,
+            // marginTop: 20,
             borderRadius: 18,
+            marginBottom: 16,
             shadowOpacity: 0.5,
             shadowRadius: 3,
-            shadowOffset: {
-              height: 0,
-              width: 0,
-            },
+            shadowOffset: { height: 0, width: 0 },
           }}
-          placeholder="Confirmer votre mot de passe"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
+        >
+          <TextInput
+            style={{
+              flex: 1,
+              paddingHorizontal: 16,
+              paddingVertical: 17,
+            }}
+            placeholder="Mot de passe"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+          />
+        </View>
         <View style={{ width: "100%", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => {

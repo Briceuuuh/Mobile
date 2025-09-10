@@ -18,6 +18,7 @@ import { BackGround } from "../../component/background";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { StackNavigationProp } from "@react-navigation/stack";
+import { IconEyeClose, IconEyeOpen } from "../../icon";
 
 type AuthStackParamList = {
   TabStack: undefined;
@@ -36,6 +37,7 @@ const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState("briceuh290@gmail.com");
   const [password, setPassword] = useState("Password");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     try {
@@ -122,29 +124,40 @@ const LoginScreen = () => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <TextInput
+        <View
           style={{
             width: "90%",
+            flexDirection: "row",
+            alignItems: "center",
             backgroundColor: "white",
             alignSelf: "center",
             marginTop: 20,
-            paddingHorizontal: 16,
-            paddingVertical: 17,
             borderRadius: 18,
             marginBottom: 16,
             shadowOpacity: 0.5,
             shadowRadius: 3,
-            shadowOffset: {
-              height: 0,
-              width: 0,
-            },
+            shadowOffset: { height: 0, width: 0 },
           }}
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
+        >
+          <TextInput
+            style={{
+              flex: 1,
+              paddingHorizontal: 16,
+              paddingVertical: 17,
+            }}
+            placeholder="Mot de passe"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={{ paddingHorizontal: 12 }}
+          >
+            {showPassword ? <IconEyeOpen /> : <IconEyeClose />}
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity
           onPress={() => {
             navigation.navigate("LostPassword");
@@ -186,22 +199,6 @@ const LoginScreen = () => {
         </View>
       </ScrollView>
 
-      {/* <TouchableOpacity
-        onPress={() => {
-          navigation.navigate("CheckForm");
-        }}
-      >
-        <Text
-          style={{
-            alignSelf: "center",
-            bottom: 40,
-            position: "absolute",
-            textDecorationLine: "underline",
-          }}
-        >
-          Version Test Forme
-        </Text>
-      </TouchableOpacity> */}
       <TouchableOpacity
         onPress={() => {
           navigation.navigate("SignUp");
@@ -223,23 +220,5 @@ const LoginScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 16 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-});
 
 export default LoginScreen;
